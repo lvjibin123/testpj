@@ -89,4 +89,5 @@ public class Brick : MonoBehaviour {
     public void destropyBrick(){
         Destroy(transform.gameObject);
     }
+
 }
