@@ -5,10 +5,11 @@ using DG.Tweening;
 
 public class GameController : MonoBehaviour {
 
+    Vector3 relativeV = new Vector3(-0.08f, 0.8f, 0);
     public float dirY = 10;
     public float r = 20;
     public float brickLength = 1.115f;
-    public float barWidth = 0.0075f;
+    public float barWidth = 0.006f;
     public GameObject camera;
 
     GameObject wall;
@@ -18,6 +19,7 @@ public class GameController : MonoBehaviour {
     GAME_STATUS game_status;
     Vector3 originV;
     GameUI gameUI;
+    TextMesh ballCount;
 
     float delVX;
     int dir = 0;
@@ -41,6 +43,7 @@ public class GameController : MonoBehaviour {
         wall = transform.Find("wall").gameObject;
         bg = transform.Find("bg").gameObject;
         gameUI = GameObject.Find("GameUI").GetComponent<GameUI>();
+        ballCount = transform.Find("ballCount").GetComponent<TextMesh>();
 
         ballList = new List<GameObject>();
 
@@ -60,13 +63,13 @@ public class GameController : MonoBehaviour {
         genBalls();
         genAll(true, ballList[0].transform.localPosition.y);
     }
-	
-	void Update () {
+
+    void FixedUpdate() {
         if (game_status == GAME_STATUS.START)
         {
             checkClick();
         }
-	}
+    }
 
     void LateUpdate()
     {
@@ -240,9 +243,13 @@ public class GameController : MonoBehaviour {
             ballList[0].transform.localPosition = new Vector3(-2.7f, ballList[0].transform.localPosition.y + dirY, 0);
         else
             ballList[0].transform.localPosition = ballList[0].transform.localPosition + new Vector3(delVX, dirY, 0);
-        if (ballList[0].transform.localPosition.y > stopY)
+
+        ballCount.transform.position = ballList[0].transform.localPosition + relativeV;
+
+        if (ballList[0].transform.localPosition.y >= stopY)
         {
             isCrossing = false;
+            camera.transform.position = offsetCamera + new Vector3(0, ballList[0].transform.position.y, ballList[0].transform.position.z);
         }
         
         for (int i = 1; i < ballList.Count; i++)
@@ -265,19 +272,20 @@ public class GameController : MonoBehaviour {
     public void hitBrick(GameObject brick)
     {
         // 减球
+        stopY = ballList[0].transform.localPosition.y;
+        isCrossing = true;
+
         gameUI.updateScore();
-        Destroy(ballList[ballList.Count - 1]);
-        ballList.RemoveAt(ballList.Count - 1);
+        Destroy(ballList[0]);
+        ballList.RemoveAt(0);
 
         if (ballList.Count == 0)
         {
             game_status = GAME_STATUS.READY;
+            ballCount.text = "";
             return;
         }
-        stopY = ballList[0].transform.localPosition.y;
-        isCrossing = true;
-        ballList[0].transform.localPosition = ballList[0].transform.localPosition - new Vector3(0, r * 2, 0);
-
+        ballCount.text = getBallCount() + "";
         brick.GetComponent<Brick>().hit();
         //if (!soundHit.GetComponent<AudioController>().getIsPlaying())
         //    soundHit.GetComponent<AudioController>().playSound();
@@ -311,7 +319,7 @@ public class GameController : MonoBehaviour {
             newball.transform.SetParent(trail.transform);
             newball.transform.localPosition = ballList[ballList.Count - 1].transform.localPosition - new Vector3(0, r * 2, 0);
             ballList.Add(newball);
-            ballList[0].GetComponent<Ball>().setBallCount(getBallCount());
+            ballCount.text = getBallCount() + "";
         }
     }
 
