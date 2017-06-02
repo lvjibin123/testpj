@@ -8,6 +8,7 @@ public class GameController : MonoBehaviour {
     public float dirY = 10;
     public float r = 20;
     public float brickLength = 1.115f;
+    public float barWidth = 0.0075f;
     public GameObject camera;
 
     GameObject wall;
@@ -25,11 +26,13 @@ public class GameController : MonoBehaviour {
     Loops loopdata;
     float stopY = 0;
     bool isCrossing = false;
+    int genLevel = 0;
 
     //prefab
     GameObject brick0;
     GameObject Boom0;
     GameObject ball0;
+    GameObject bar0;
     GameObject gainball0;
 
 	void Awake () {
@@ -50,10 +53,12 @@ public class GameController : MonoBehaviour {
         brick0 = (GameObject)Resources.Load("Prefab/brick");
         ball0 = (GameObject)Resources.Load("Prefab/ball2");
         gainball0 = (GameObject)Resources.Load("Prefab/gainball");
+        bar0 = (GameObject)Resources.Load("Prefab/bar");
         Boom0 = (GameObject)Resources.Load("FX/Boom");
         loopdata = JsonUtil.LoadColorFromFile();
 
-        genBricks(true);
+        genBalls();
+        genAll(true, ballList[0].transform.localPosition.y);
     }
 	
 	void Update () {
@@ -74,64 +79,98 @@ public class GameController : MonoBehaviour {
         }
     }
 
-    void genBricks(bool isFirst) {
+    void genBalls()
+    {
+        genLevel = UnityEngine.Random.Range(5, 11);
+        int number = 0;
+        List<int> array;
+        float startY = ballList[0].transform.localPosition.y;
+        for (int i = 1; i < genLevel; i++)
+        {
+            array = new List<int>() { 0, 1, 2, 3, 4 };
+            number = UnityEngine.Random.Range(0, 3);
+            for (int j = 0; j < number; j++)
+            {
+                int ran = UnityEngine.Random.Range(0, array.Count);
+                float posY = startY + i * brickLength;
+                Vector3 pos = new Vector3((array[ran] - 2) * brickLength, posY, 0);
+                int count = UnityEngine.Random.Range(1, getBallCount());
+                initGainBall(count, pos);
+
+                array.RemoveAt(ran);
+
+            }
+        }
+    }
+
+    void genAll(bool isFirst, float startY)
+    {
+        int smallPos = UnityEngine.Random.Range(0, 5);
+        float posY = startY + genLevel * brickLength;
+        for (int i = 0; i < 5; i++)
+        {
+            Vector3 pos = new Vector3((i - 2) * brickLength, posY, 0);
+
+            int score = UnityEngine.Random.Range(1, 3);
+            if (!isFirst)
+            {
+                // 高层的数字中，有一个最小，其余的随机。
+                if (i == smallPos)
+                {
+                    score = UnityEngine.Random.Range(1, getBallCount() / 2 + 1);
+                }
+                else
+                {
+                    score = UnityEngine.Random.Range(10, 50);
+                }
+            }
+            initBrick(score, pos);
+        }
+
         int level = UnityEngine.Random.Range(10, 20);
-        if(isFirst)
-            level = UnityEngine.Random.Range(5, 11);
 
         // middle
         int type = 0;
         int number = 0;
         List<int> array;
-        for (int i = 1; i < level; i++) {
+
+        // 中间的每一层
+        for (int i = genLevel + 1; i < level + genLevel; i++)
+        {
             array = new List<int>() { 0, 1, 2, 3, 4 }; 
             number = UnityEngine.Random.Range(0, 3);
+            // 每一层放多少个
             for (int j = 0; j < number; j++) {
                 type = UnityEngine.Random.Range(0, 3);
-                int ran = UnityEngine.Random.Range(0, array.Count);
-                array.RemoveAt(ran);
 
-                float posY = ballList[0].transform.localPosition.y + i * brickLength;
-                Vector3 pos = new Vector3((ran - 2) * brickLength, posY, 0);
+                int ran = UnityEngine.Random.Range(0, array.Count);
+                posY = startY + i * brickLength;
+                Vector3 pos = new Vector3((array[ran] - 2) * brickLength, posY, 0);
+
                 if (type == 0)
                 {
                     //gainball
                     int count = UnityEngine.Random.Range(1, getBallCount());
                     initGainBall(count, pos);
                 }
-                else if (type == 1 && j != number - 1)
+                else if (type == 1 && i != level + genLevel - 1 && i != genLevel + 1)
                 {
-                    //brick 一排砖前面一行不会有砖
+                    //brick 一排砖前面一行和后面一行不会有砖
                     int score = UnityEngine.Random.Range(10, 50);
                     initBrick(score, pos);
                 }
-                else if (type == 2)
+                else if (type == 2 && array[ran] != 4)
                 {
-                    //block   
+                    //bar 
+                    pos = pos + new Vector3(0.5f * brickLength + barWidth, 0, 0); 
+                    initBar(pos);
                 }
+
+                array.RemoveAt(ran);
             }
         }
 
-
-        int smallPos = UnityEngine.Random.Range(0, 5);
-        for (int i = 0; i < 5; i++) {
-            float posY = ballList[0].transform.localPosition.y + level * brickLength;
-            Vector3 pos = new Vector3((i - 2) * brickLength, posY, 0);
-
-            int score = UnityEngine.Random.Range(1, 3);
-            if (!isFirst)
-            { 
-                // 高层的数字中，有一个最小，其余的随机。
-                if (i == smallPos)
-                {
-                    score = UnityEngine.Random.Range(1, getBallCount() / 2 + 1);
-                }
-                else {
-                    score = UnityEngine.Random.Range(10, 50);
-                }
-            }
-            initBrick(score, pos);
-        }
+        genLevel = level;
     }
 
     void initBrick(int number, Vector3 pos) {
@@ -148,6 +187,13 @@ public class GameController : MonoBehaviour {
         gainball.transform.position = pos;
         gainball.transform.SetParent(wall.transform, false);
         gainball.GetComponent<GainBall>().setBallCount(number);
+    }
+
+    void initBar(Vector3 pos)
+    {
+        GameObject bar = GameObject.Instantiate<GameObject>(bar0);
+        bar.transform.position = pos;
+        bar.transform.SetParent(wall.transform, false);
     }
 
     public Color getBrickColor(int score)
@@ -188,8 +234,12 @@ public class GameController : MonoBehaviour {
     void moveBalls() {
         if (ballList == null || ballList.Count == 0)
             return;
-
-        ballList[0].transform.localPosition = ballList[0].transform.localPosition + new Vector3(delVX, dirY, 0);
+        if (ballList[0].transform.localPosition.x + delVX > 2.7f)
+            ballList[0].transform.localPosition = new Vector3(2.7f, ballList[0].transform.localPosition.y + dirY, 0);
+        else if (ballList[0].transform.localPosition.x + delVX < -2.7f)
+            ballList[0].transform.localPosition = new Vector3(-2.7f, ballList[0].transform.localPosition.y + dirY, 0);
+        else
+            ballList[0].transform.localPosition = ballList[0].transform.localPosition + new Vector3(delVX, dirY, 0);
         if (ballList[0].transform.localPosition.y > stopY)
         {
             isCrossing = false;
@@ -240,7 +290,7 @@ public class GameController : MonoBehaviour {
 
             brick.GetComponent<Brick>().destropyBrick();
 
-            genBricks(false);
+            genAll(false, brick.transform.localPosition.y);
         }
     }
 
