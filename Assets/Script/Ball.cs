@@ -15,12 +15,14 @@ public class Ball : MonoBehaviour {
     {
         if (coll.gameObject.name.Contains("brick"))
         {
-            // 只能从底部碰撞
-            if (coll.transform.localPosition.y - 1.115f/2 < transform.position.y)
-                return;
-            int count = gameController.getBallCount();
-            
-            gameController.hitBrick(coll.gameObject);
+            if (gameController.isFirstBall(gameObject))
+            {
+                // 只能从底部碰撞
+                if (coll.transform.localPosition.y - 1.115f / 2 < transform.position.y)
+                    return;
+
+                gameController.hitBrick(coll.gameObject);
+            }
         }
         else if (coll.gameObject.name.Contains("gainball"))
         {

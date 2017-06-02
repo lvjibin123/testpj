@@ -110,6 +110,7 @@ public class GameController : MonoBehaviour {
     {
         int smallPos = UnityEngine.Random.Range(0, 5);
         float posY = startY + genLevel * brickLength;
+        // 一行墙
         for (int i = 0; i < 5; i++)
         {
             Vector3 pos = new Vector3((i - 2) * brickLength, posY, 0);
@@ -127,7 +128,7 @@ public class GameController : MonoBehaviour {
                     score = UnityEngine.Random.Range(10, 50);
                 }
             }
-            initBrick(score, pos);
+            initBrick(score, pos, true);
         }
 
         int level = UnityEngine.Random.Range(10, 20);
@@ -160,7 +161,7 @@ public class GameController : MonoBehaviour {
                 {
                     //brick 一排砖前面一行和后面一行不会有砖
                     int score = UnityEngine.Random.Range(10, 50);
-                    initBrick(score, pos);
+                    initBrick(score, pos, false);
                 }
                 else if (type == 2 && array[ran] != 4)
                 {
@@ -176,12 +177,16 @@ public class GameController : MonoBehaviour {
         genLevel = level;
     }
 
-    void initBrick(int number, Vector3 pos) {
+    void initBrick(int number, Vector3 pos, bool isWall) {
         GameObject brick = GameObject.Instantiate<GameObject>(brick0);
         brick.transform.position = pos;
         brick.transform.SetParent(wall.transform, false);
-        brick.GetComponent<Brick>().setNumber(number);
-        brick.GetComponent<Brick>().setColor(getBrickColor(number));
+
+        Brick brickScript = brick.GetComponent<Brick>();
+        brickScript.setNumber(number);
+        brickScript.setColor(getBrickColor(number));
+        if (isWall)
+            brickScript.setWall();
     }
 
     void initGainBall(int number, Vector3 pos)
@@ -246,7 +251,7 @@ public class GameController : MonoBehaviour {
 
         ballCount.transform.position = ballList[0].transform.localPosition + relativeV;
 
-        if (ballList[0].transform.localPosition.y >= stopY)
+        if (ballList[0].transform.localPosition.y >= stopY && isCrossing)
         {
             isCrossing = false;
             camera.transform.position = offsetCamera + new Vector3(0, ballList[0].transform.position.y, ballList[0].transform.position.z);
@@ -268,9 +273,17 @@ public class GameController : MonoBehaviour {
             return ballList.Count - 1;
     }
 
+    public bool isFirstBall(GameObject ball) {
+        if (ball == ballList[0])
+            return true;
+        else
+            return false;
+    }
+
     //碰到砖块
     public void hitBrick(GameObject brick)
     {
+
         // 减球
         stopY = ballList[0].transform.localPosition.y;
         isCrossing = true;
@@ -298,7 +311,8 @@ public class GameController : MonoBehaviour {
 
             brick.GetComponent<Brick>().destropyBrick();
 
-            genAll(false, brick.transform.localPosition.y);
+            if (brick.GetComponent<Brick>().getWall())
+                genAll(false, brick.transform.localPosition.y);
         }
     }
 
