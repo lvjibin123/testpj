@@ -13,7 +13,7 @@ public class Ball : MonoBehaviour {
         ballCount = transform.Find("ballCount").GetComponent<TextMesh>();
     }
 
-    void setBallCount(int count){
+    public void setBallCount(int count){
         ballCount.text = count + "";
     }
 
@@ -24,16 +24,13 @@ public class Ball : MonoBehaviour {
             int count = gameController.getBallCount();
             if (count == 0)
                 return;
-            if (count > 1)
-                setBallCount(count - 2);
-            else
-                setBallCount(0);
-
+            
+            setBallCount(count - 1);
             gameController.hitBrick(coll.gameObject);
         }
         else if (coll.gameObject.name.Contains("gainball"))
         {
-          //  gameController.gainBall(coll.gameObject);
+            gameController.gainBall(coll.gameObject);
         }
     }
 }

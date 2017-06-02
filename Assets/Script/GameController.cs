@@ -23,10 +23,14 @@ public class GameController : MonoBehaviour {
     Vector3 offsetBg;
     Vector3 offsetCamera;
     Loops loopdata;
+    float stopY = 0;
+    bool isCrossing = false;
 
     //prefab
     GameObject brick0;
     GameObject Boom0;
+    GameObject ball0;
+    GameObject gainball0;
 
 	void Awake () {
         game_status = GAME_STATUS.READY;
@@ -44,8 +48,11 @@ public class GameController : MonoBehaviour {
         offsetCamera = camera.transform.position - ballList[0].transform.position;
 
         brick0 = (GameObject)Resources.Load("Prefab/brick");
+        ball0 = (GameObject)Resources.Load("Prefab/ball2");
+        gainball0 = (GameObject)Resources.Load("Prefab/gainball");
         Boom0 = (GameObject)Resources.Load("FX/Boom");
         loopdata = JsonUtil.LoadColorFromFile();
+
         genBricks(true);
     }
 	
@@ -58,6 +65,8 @@ public class GameController : MonoBehaviour {
 
     void LateUpdate()
     {
+        if (isCrossing)
+            return;
         if (game_status == GAME_STATUS.START && ballList != null && ballList.Count > 0)
         {
             bg.transform.position = offsetBg + new Vector3(0, ballList[0].transform.position.y, ballList[0].transform.position.z);
@@ -69,18 +78,76 @@ public class GameController : MonoBehaviour {
         int level = UnityEngine.Random.Range(10, 20);
         if(isFirst)
             level = UnityEngine.Random.Range(5, 11);
+
+        // middle
+        int type = 0;
+        int number = 0;
+        List<int> array;
+        for (int i = 1; i < level; i++) {
+            array = new List<int>() { 0, 1, 2, 3, 4 }; 
+            number = UnityEngine.Random.Range(0, 3);
+            for (int j = 0; j < number; j++) {
+                type = UnityEngine.Random.Range(0, 3);
+                int ran = UnityEngine.Random.Range(0, array.Count);
+                array.RemoveAt(ran);
+
+                float posY = ballList[0].transform.localPosition.y + i * brickLength;
+                Vector3 pos = new Vector3((ran - 2) * brickLength, posY, 0);
+                if (type == 0)
+                {
+                    //gainball
+                    int count = UnityEngine.Random.Range(1, getBallCount());
+                    initGainBall(count, pos);
+                }
+                else if (type == 1 && j != number - 1)
+                {
+                    //brick 一排砖前面一行不会有砖
+                    int score = UnityEngine.Random.Range(10, 50);
+                    initBrick(score, pos);
+                }
+                else if (type == 2)
+                {
+                    //block   
+                }
+            }
+        }
+
+
+        int smallPos = UnityEngine.Random.Range(0, 5);
         for (int i = 0; i < 5; i++) {
             float posY = ballList[0].transform.localPosition.y + level * brickLength;
             Vector3 pos = new Vector3((i - 2) * brickLength, posY, 0);
 
-            GameObject brick = GameObject.Instantiate<GameObject>(brick0);
-            brick.transform.position = pos;
-            brick.transform.SetParent(wall.transform, false);
             int score = UnityEngine.Random.Range(1, 3);
-
-            brick.GetComponent<Brick>().setNumber(score);
-            brick.GetComponent<Brick>().setColor(getBrickColor(score));
+            if (!isFirst)
+            { 
+                // 高层的数字中，有一个最小，其余的随机。
+                if (i == smallPos)
+                {
+                    score = UnityEngine.Random.Range(1, getBallCount() / 2 + 1);
+                }
+                else {
+                    score = UnityEngine.Random.Range(10, 50);
+                }
+            }
+            initBrick(score, pos);
         }
+    }
+
+    void initBrick(int number, Vector3 pos) {
+        GameObject brick = GameObject.Instantiate<GameObject>(brick0);
+        brick.transform.position = pos;
+        brick.transform.SetParent(wall.transform, false);
+        brick.GetComponent<Brick>().setNumber(number);
+        brick.GetComponent<Brick>().setColor(getBrickColor(number));
+    }
+
+    void initGainBall(int number, Vector3 pos)
+    {
+        GameObject gainball = GameObject.Instantiate<GameObject>(gainball0);
+        gainball.transform.position = pos;
+        gainball.transform.SetParent(wall.transform, false);
+        gainball.GetComponent<GainBall>().setBallCount(number);
     }
 
     public Color getBrickColor(int score)
@@ -123,7 +190,12 @@ public class GameController : MonoBehaviour {
             return;
 
         ballList[0].transform.localPosition = ballList[0].transform.localPosition + new Vector3(delVX, dirY, 0);
-        for (int i = 1; i < ballList.Count;i++ )
+        if (ballList[0].transform.localPosition.y > stopY)
+        {
+            isCrossing = false;
+        }
+        
+        for (int i = 1; i < ballList.Count; i++)
         {
             Vector3 deltaV = ballList[i-1].transform.localPosition - ballList[i].transform.localPosition;
             Vector3 moveV = deltaV - Vector3.Normalize(deltaV) * r * 2;
@@ -136,9 +208,10 @@ public class GameController : MonoBehaviour {
         if (ballList == null)
             return 0;
         else
-            return ballList.Count;
+            return ballList.Count - 1;
     }
 
+    //碰到砖块
     public void hitBrick(GameObject brick)
     {
         // 减球
@@ -151,6 +224,8 @@ public class GameController : MonoBehaviour {
             game_status = GAME_STATUS.READY;
             return;
         }
+        stopY = ballList[0].transform.localPosition.y;
+        isCrossing = true;
         ballList[0].transform.localPosition = ballList[0].transform.localPosition - new Vector3(0, r * 2, 0);
 
         brick.GetComponent<Brick>().hit();
@@ -166,6 +241,27 @@ public class GameController : MonoBehaviour {
             brick.GetComponent<Brick>().destropyBrick();
 
             genBricks(false);
+        }
+    }
+
+    //得到新球
+    public void gainBall(GameObject gainball)
+    {
+
+        //var Fx_frag = GameObject.Instantiate<GameObject>(Frag0);
+        //Fx_frag.transform.position = ball.transform.position;
+        //Fx_frag.transform.SetParent(wall.transform, false);
+        //StartCoroutine(WaitToDestroy(Fx_frag));
+
+        int count = gainball.GetComponent<GainBall>().getCount();
+        Destroy(gainball);
+        for (int i = 0; i < count; i++)
+        {
+            GameObject newball = GameObject.Instantiate<GameObject>(ball0);
+            newball.transform.SetParent(trail.transform);
+            newball.transform.localPosition = ballList[ballList.Count - 1].transform.localPosition - new Vector3(0, r * 2, 0);
+            ballList.Add(newball);
+            ballList[0].GetComponent<Ball>().setBallCount(getBallCount());
         }
     }
 
