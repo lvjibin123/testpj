@@ -35,6 +35,7 @@ public class GameController : MonoBehaviour {
     GameObject Boom0;
     GameObject ball0;
     GameObject bar0;
+    GameObject bar2;
     GameObject gainball0;
 
 	void Awake () {
@@ -57,6 +58,7 @@ public class GameController : MonoBehaviour {
         ball0 = (GameObject)Resources.Load("Prefab/ball2");
         gainball0 = (GameObject)Resources.Load("Prefab/gainball");
         bar0 = (GameObject)Resources.Load("Prefab/bar");
+        bar2 = (GameObject)Resources.Load("Prefab/bar2");
         Boom0 = (GameObject)Resources.Load("FX/Boom");
         loopdata = JsonUtil.LoadColorFromFile();
 
@@ -97,8 +99,7 @@ public class GameController : MonoBehaviour {
                 int ran = UnityEngine.Random.Range(0, array.Count);
                 float posY = startY + i * brickLength;
                 Vector3 pos = new Vector3((array[ran] - 2) * brickLength, posY, 0);
-                int count = UnityEngine.Random.Range(1, getBallCount());
-                initGainBall(count, pos);
+                initGainBall(pos);
 
                 array.RemoveAt(ran);
 
@@ -114,62 +115,91 @@ public class GameController : MonoBehaviour {
         int level = UnityEngine.Random.Range(10, 20);
 
         // middle
-        int type1, type2 = 0;
+        // 大种类 0-砖块，1-遮挡物
+        int type1 = 0;
+        int type2 = 0;
+        // 每一层放多少个
         int number = 0;
+        // 下层是否放满
+        bool isLVFull = false;
         float posY = 0;
         List<int> array;
-
+        
         // 中间的每一层
         for (int i = genLevel + 1; i < level + genLevel; i++)
         {
             array = new List<int>() { 0, 1, 2, 3, 4 };
-            // 每一层放多少个
             number = UnityEngine.Random.Range(0, 3);
-            // 大种类，砖和遮挡物不能放在同一层
-            type1 = UnityEngine.Random.Range(0, 2);
-            for (int j = 0; j < number; j++)
+            posY = startY + i * brickLength;
+            if (isLVFull)
             {
-                // 小种类
-                type2 = UnityEngine.Random.Range(0, 2);
-
-                int ran = UnityEngine.Random.Range(0, array.Count);
-                posY = startY + i * brickLength;
-                Vector3 pos = new Vector3((array[ran] - 2) * brickLength, posY, 0);
-
-                if (type1 == 0)
+                isLVFull = false;
+                // 只放小球
+                for (int j = 0; j < number; j++)
                 {
-                    // 砖
+                    // 小种类,球的概率1/3
+                    type2 = UnityEngine.Random.Range(0, 3);
+                    int ran = UnityEngine.Random.Range(0, array.Count);
+                    Vector3 pos = new Vector3((array[ran] - 2) * brickLength, posY, 0);
                     if (type2 == 0)
                     {
                         //gainball
-                        int count = UnityEngine.Random.Range(1, getBallCount());
-                        initGainBall(count, pos);
-                    }
-                    else if (type2 == 1 && i != level + genLevel - 1 && i != genLevel + 1)
-                    {
-                        //brick 一排砖前面一行和后面一行不会有砖
-                        int score = UnityEngine.Random.Range(10, 50);
-                        initBrick(score, pos, false);
+                        initGainBall(pos);
                     }
                 }
-                else
+            }
+            else
+            {
+                type1 = 1 - type1;
+                isLVFull = false;
+                for (int j = 0; j < number; j++)
                 {
-                    // 遮挡物
-                    if (type2 == 0)
-                    {
-                        //gainball
-                        int count = UnityEngine.Random.Range(1, getBallCount());
-                        initGainBall(count, pos);
-                    }
-                    else if (type2 == 1 && array[ran] != 4)
-                    {
-                        //bar 
-                        pos = pos + new Vector3(0.5f * brickLength + barWidth, 0, 0);
-                        initBar(pos);
-                    }
-                }
+                    // 小种类,球的概率1/3
+                    type2 = UnityEngine.Random.Range(0, 3);
+                    int ran = UnityEngine.Random.Range(0, array.Count);
+                    Vector3 pos = new Vector3((array[ran] - 2) * brickLength, posY, 0);
 
-                array.RemoveAt(ran);
+                    if (type1 == 0)
+                    {
+                        // 砖
+                        if (type2 == 0)
+                        {
+                            //gainball
+                            initGainBall(pos);
+                        }
+                        else if (i != level + genLevel - 1 && i != genLevel + 1)
+                        {
+                            //brick 一排砖前面一行和后面一行不会有砖
+                            int score = UnityEngine.Random.Range(10, 50);
+                            initBrick(score, pos, false);
+                        }
+                    }
+                    else
+                    {
+                        // 遮挡物
+                        if (type2 == 0)
+                        {
+                            //gainball
+                            initGainBall(pos);
+                        }
+                        else if (type2 == 1 && array[ran] != 4)
+                        {
+                            //bar 
+                            pos = pos + new Vector3(0.5f * brickLength + barWidth, 0, 0);
+                            initBar(pos);
+                        }
+                        else if (type2 == 2 && array[ran] != 4 && (level + genLevel - i > 2))
+                        {
+                            //bar2 
+                            pos = pos + new Vector3(0.5f * brickLength + barWidth, brickLength / 2, 0);
+                            initBar2(pos);
+                            // 下一层只能有小球
+                            isLVFull = true;
+                        }
+                    }
+
+                    array.RemoveAt(ran);
+                }
             }
         }
 
@@ -214,17 +244,25 @@ public class GameController : MonoBehaviour {
             brickScript.setWall();
     }
 
-    void initGainBall(int number, Vector3 pos)
+    void initGainBall(Vector3 pos)
     {
+        int count = UnityEngine.Random.Range(1, 6);
         GameObject gainball = GameObject.Instantiate<GameObject>(gainball0);
         gainball.transform.position = pos;
         gainball.transform.SetParent(wall, false);
-        gainball.GetComponent<GainBall>().setBallCount(number);
+        gainball.GetComponent<GainBall>().setBallCount(count);
     }
 
     void initBar(Vector3 pos)
     {
         GameObject bar = GameObject.Instantiate<GameObject>(bar0);
+        bar.transform.position = pos;
+        bar.transform.SetParent(wall, false);
+    }
+
+    void initBar2(Vector3 pos)
+    {
+        GameObject bar = GameObject.Instantiate<GameObject>(bar2);
         bar.transform.position = pos;
         bar.transform.SetParent(wall, false);
     }
