@@ -9,10 +9,17 @@ public class GameUI : MonoBehaviour {
     Transform Menu;
     Text Text_score;
     int score = 0;
+    public static float base_height = 1920;
+    public static float base_width = 1080;
 
     public int getScore()
     {
         return score;
+    }
+
+    void Awake()
+    {
+        adapterCanvas();
     }
 
 	void Start () {
@@ -22,10 +29,22 @@ public class GameUI : MonoBehaviour {
 
         initMenu();
 	}
-	
-	void Update () {
-		
-	}
+
+    //Canvas适配
+    void adapterCanvas()
+    {
+        float scale = 1;
+
+        if (base_height / base_width > Screen.height * 1.0f / Screen.width)
+        {
+            scale = Screen.height / base_height;
+        }
+        else
+        {
+            scale = Screen.width / base_width;
+        }
+        transform.GetComponent<CanvasScaler>().scaleFactor = scale;
+    }
 
     public void updateScore()
     {

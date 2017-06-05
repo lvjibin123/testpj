@@ -62,6 +62,8 @@ public class GameController : MonoBehaviour {
         isCrossing = false;
         initBallList();
         Text_ballCount.text = getBallCount() + "";
+        delVX = 0;
+
         for (int i = 0; i < ballList.Count; i++)
         {
             Tweener tweener = ballList[i].transform.DOLocalMove(ballList[i].transform.localPosition + new Vector3(0, (0-i) * r * 2, 0), 0.2f)
@@ -142,7 +144,27 @@ public class GameController : MonoBehaviour {
         genLevel += 5;
     }
 
+    int getRandomNum() {
+        List<int> brickNum = new List<int>();
+        for (int i = 0; i < 4 ; i++)
+        {
+            brickNum.Add(i);
+            if (i > 0)
+            {
+                brickNum.Add(i);
+            }
+        }
+        int index = UnityEngine.Random.Range(0, brickNum.Count);
+        return brickNum[index];
+    }
+
     // 生成一排砖，和砖后面的一组Map
+    /// <summary>
+    /// 规则：1、除了一排砖以外，每层砖数不超过2
+    ///       2、砖块和遮挡条交替出现在每层，一排砖的前后只能放遮挡条
+    ///       3、一层中只能有一种遮挡条。
+    /// </summary>
+
     void genAll(bool isFirst, float startY)
     {
         // 一排砖
@@ -165,7 +187,7 @@ public class GameController : MonoBehaviour {
         for (int i = genLevel + 1; i < level + genLevel; i++)
         {
             array = new List<int>() { 0, 1, 2, 3, 4 };
-            number = UnityEngine.Random.Range(0, 3);
+            number = getRandomNum();
             posY = startY + i * brickLength;
             if (isLVFull)
             {
@@ -186,8 +208,12 @@ public class GameController : MonoBehaviour {
             }
             else
             {
-                type1 = 1 - type1;
                 isLVFull = false;
+                type1 = 1 - type1;
+                if (type1 == 1) {
+                    // 遮挡物只有4个位置
+                    array.Remove(4);
+                }
                 for (int j = 0; j < number; j++)
                 {
                     if (type1 == 1 && j > 0 && type2 != 0)
@@ -210,9 +236,10 @@ public class GameController : MonoBehaviour {
                             //gainball
                             initGainBall(pos);
                         }
-                        else if (i != level + genLevel - 1 && i != genLevel + 1)
+                        else if (i != level + genLevel - 1 && i != genLevel + 1 && j < 2)
                         {
                             //brick 一排砖前面一行和后面一行不会有砖
+                            //一行最多两个
                             int score = UnityEngine.Random.Range(10, 50);
                             initBrick(score, pos, false);
                         }
@@ -225,13 +252,13 @@ public class GameController : MonoBehaviour {
                             //gainball
                             initGainBall(pos);
                         }
-                        else if (type2 == 1 && array[ran] != 4)
+                        else if (type2 == 1)
                         {
                             //bar 
                             pos = pos + new Vector3(0.5f * brickLength + barWidth, 0, 0);
                             initBar(pos);
                         }
-                        else if (type2 == 2 && array[ran] != 4 && (level + genLevel - i > 2))
+                        else if (type2 == 2 && (level + genLevel - i > 2))
                         {
                             //bar2 
                             pos = pos + new Vector3(0.5f * brickLength + barWidth, brickLength / 2, 0);

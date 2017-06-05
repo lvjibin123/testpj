@@ -175,7 +175,7 @@ public class CharacterController2D : MonoBehaviour
             else {
                 _raycastHit = Physics2D.Raycast(ray, deltaMovement, rayDistance, platformMask);
             }
-            Debug.DrawRay(rayorigin[i], deltaD, Color.red, 2, false);
+            //Debug.DrawRay(rayorigin[i], deltaD, Color.red, 2, false);
 
             if (_raycastHit)
             {
