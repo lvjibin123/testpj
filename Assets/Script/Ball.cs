@@ -60,6 +60,9 @@ public class Ball : MonoBehaviour {
 
     void OnCollisionEnter2D(Collision2D coll)
     {
+        if (gameController == null)
+            return;
+
         if (gameController.isFirstBall(gameObject))
         {
             if (coll.gameObject.name.Contains("brick"))

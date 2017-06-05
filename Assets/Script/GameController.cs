@@ -5,6 +5,7 @@ using DG.Tweening;
 
 public class GameController : MonoBehaviour {
 
+    public int ballCount = 4;
     public float dirY = 0.04f;
     public float r = 20;
     public float brickLength = 1.115f;
@@ -18,7 +19,7 @@ public class GameController : MonoBehaviour {
     GAME_STATUS game_status;
     Vector3 originV;
     GameUI gameUI;
-    TextMesh ballCount;
+    TextMesh Text_ballCount;
 
     Vector3 relativeV = new Vector3(0, 0.35f, 0);
     float delVX;
@@ -44,15 +45,7 @@ public class GameController : MonoBehaviour {
         wall = transform.Find("wall");
         bg = transform.Find("bg").gameObject;
         gameUI = GameObject.Find("GameUI").GetComponent<GameUI>();
-        ballCount = transform.Find("ballCount").GetComponent<TextMesh>();
-
-        ballList = new List<GameObject>();
-
-        for (int i = 0; i < trail.transform.childCount; i++) {
-            ballList.Add(trail.transform.GetChild(i).gameObject);
-        }
-        offsetBg = bg.transform.position - ballList[0].transform.position;
-        offsetCamera = camera.transform.position - ballList[0].transform.position;
+        Text_ballCount = transform.Find("ballCount").GetComponent<TextMesh>();
 
         brick0 = (GameObject)Resources.Load("Prefab/brick");
         ball0 = (GameObject)Resources.Load("Prefab/ball2");
@@ -62,8 +55,42 @@ public class GameController : MonoBehaviour {
         Boom0 = (GameObject)Resources.Load("FX/Boom");
         loopdata = JsonUtil.LoadColorFromFile();
 
+    }
+
+    public void ballMoveStart()
+    {
+        isCrossing = false;
+        initBallList();
+        Text_ballCount.text = getBallCount() + "";
+        for (int i = 0; i < ballList.Count; i++)
+        {
+            ballList[i].transform.DOLocalMove(ballList[i].transform.localPosition + new Vector3(0, (ballList.Count - 1 - i) * r * 2, 0), 0.2f)
+                .SetEase(Ease.Linear)
+                .SetAutoKill(true)
+                .SetUpdate(true);
+        }
+        game_status = GAME_STATUS.START;
+
         genBalls();
         genAll(true, ballList[0].transform.localPosition.y);
+    }
+
+    void initBallList() {
+        ballList = new List<GameObject>();
+        GameObject firstBall = trail.transform.GetChild(0).gameObject;
+        firstBall.transform.localPosition = new Vector3(0, -1.25f, 0);
+        for (int i = 0; i < ballCount; i++)
+        {
+            GameObject newball = GameObject.Instantiate<GameObject>(ball0);
+            newball.transform.SetParent(trail.transform);
+            newball.transform.localPosition = firstBall.transform.localPosition;
+        }
+        for (int i = 0; i < trail.transform.childCount; i++)
+        {
+            ballList.Add(trail.transform.GetChild(i).gameObject);
+        }
+        offsetBg = bg.transform.position - ballList[0].transform.position;
+        offsetCamera = camera.transform.position - ballList[0].transform.position;
     }
 
     void FixedUpdate() {
@@ -299,17 +326,6 @@ public class GameController : MonoBehaviour {
         }
     }
 
-    public void ballMoveStart()
-    {
-        for (int i = 0; i < ballList.Count; i++) {
-            ballList[i].transform.DOLocalMove(ballList[i].transform.localPosition + new Vector3(0, (ballList.Count -1- i) * r * 2, 0), 0.2f)
-                .SetEase(Ease.Linear)
-                .SetAutoKill(true)
-                .SetUpdate(true);
-        }
-        game_status = GAME_STATUS.START;
-    }
-
     public void stopMove() {
         delVX = 0;
         isStop = true;
@@ -328,7 +344,7 @@ public class GameController : MonoBehaviour {
         else if (ballList[0].transform.localPosition.x < -2.7f)
             ballList[0].transform.localPosition = new Vector3(-2.7f, ballList[0].transform.localPosition.y, 0);
 
-        ballCount.transform.position = ballList[0].transform.localPosition + relativeV;
+        Text_ballCount.transform.position = ballList[0].transform.localPosition + relativeV;
 
         if (ballList[0].transform.localPosition.y >= stopY && isCrossing)
         {
@@ -377,6 +393,43 @@ public class GameController : MonoBehaviour {
             return false;
     }
 
+    void gameOver() {
+        game_status = GAME_STATUS.READY;
+        Text_ballCount.text = "";
+        destroyWallChild();
+        destroyBallChild();
+        gameUI.initMenu();
+    }
+
+    void destroyWallChild()
+    {
+        for (int i = 0; i < wall.transform.childCount; i++)
+        {
+            Destroy(wall.transform.GetChild(i).gameObject);
+        }
+    }
+
+    void destroyBallChild()
+    {
+        if (ballList == null || ballList.Count == 0)
+        {
+
+            GameObject newball = GameObject.Instantiate<GameObject>(ball0);
+            newball.transform.SetParent(trail.transform);
+            newball.transform.localPosition = new Vector3(0, -1.25f, 0);
+
+            bg.transform.position = offsetBg + new Vector3(0, newball.transform.position.y, newball.transform.position.z);
+            camera.transform.position = offsetCamera + new Vector3(0, newball.transform.position.y, newball.transform.position.z);
+            return;
+        }
+
+        for (int i = 1; i < ballList.Count; i++)
+        {
+            Destroy(ballList[i]);
+        }
+        ballList.Clear();
+    }
+
     //碰到砖块
     public void hitBrick(GameObject brick)
     {
@@ -391,11 +444,10 @@ public class GameController : MonoBehaviour {
 
         if (ballList.Count == 0)
         {
-            game_status = GAME_STATUS.READY;
-            ballCount.text = "";
+            gameOver();
             return;
         }
-        ballCount.text = getBallCount() + "";
+        Text_ballCount.text = getBallCount() + "";
         brick.GetComponent<Brick>().hit();
         //if (!soundHit.GetComponent<AudioController>().getIsPlaying())
         //    soundHit.GetComponent<AudioController>().playSound();
@@ -433,7 +485,7 @@ public class GameController : MonoBehaviour {
             StartCoroutine(addBall(newball, i, ballList.Count - 1));
 
             ballList.Add(newball);
-            ballCount.text = getBallCount() + "";
+            Text_ballCount.text = getBallCount() + "";
         }
     }
 

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class GameUI : MonoBehaviour {
 
     GameController gameController;
-    GameObject Button_start;
+    Transform Menu;
     Text Text_score;
     int score = 0;
 
@@ -17,8 +17,10 @@ public class GameUI : MonoBehaviour {
 
 	void Start () {
         gameController = GameObject.Find("Game").transform.GetComponent<GameController>();
-        Button_start = transform.Find("Button_start").gameObject;
-        Text_score = transform.Find("Text_score").GetComponent<Text>();
+        Menu = transform.Find("Menu");
+        Text_score = transform.Find("GameScene").Find("Text_score").GetComponent<Text>();
+
+        initMenu();
 	}
 	
 	void Update () {
@@ -39,6 +41,13 @@ public class GameUI : MonoBehaviour {
 
     public void onStartBtnClick() {
         gameController.ballMoveStart();
-        Button_start.SetActive(false);
+        Menu.localPosition = new Vector3(0, 1920, 0);
+    }
+
+    public void initMenu()
+    {
+        Menu.localPosition = new Vector3(0, 0, 0);
+        score = 0;
+        Text_score.text = score + "";
     }
 }
