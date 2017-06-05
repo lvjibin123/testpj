@@ -43,7 +43,6 @@ public class Ball : MonoBehaviour {
             }
             else if (hit.transform.name.Contains("Bar"))
             {
-                Debug.Log("Bar");
             }
         }
     }
@@ -74,6 +73,14 @@ public class Ball : MonoBehaviour {
             else if (coll.gameObject.name.Contains("gainball"))
             {
                 gameController.gainBall(coll.gameObject);
+            }
+            else if (coll.gameObject.name.Contains("Bar"))
+            {
+                // 从底部碰撞
+                if (coll.transform.localPosition.y - 1.115f / 2 >= transform.position.y && Mathf.Abs(coll.transform.localPosition.x - transform.position.x)<0.04f)
+                {
+                    gameController.stopMove();
+                }
             }
         }
     }

@@ -5,8 +5,7 @@ using DG.Tweening;
 
 public class GameController : MonoBehaviour {
 
-    Vector3 relativeV = new Vector3(0, 0.35f, 0);
-    public float dirY = 10;
+    public float dirY = 0.04f;
     public float r = 20;
     public float brickLength = 1.115f;
     public float barWidth = 0.006f;
@@ -21,6 +20,7 @@ public class GameController : MonoBehaviour {
     GameUI gameUI;
     TextMesh ballCount;
 
+    Vector3 relativeV = new Vector3(0, 0.35f, 0);
     float delVX;
     Vector3 offsetBg;
     Vector3 offsetCamera;
@@ -28,6 +28,7 @@ public class GameController : MonoBehaviour {
     float stopY = 0;
     bool isCrossing = false;
     int genLevel = 0;
+    bool isStop = false;
 
     //prefab
     GameObject brick0;
@@ -107,34 +108,15 @@ public class GameController : MonoBehaviour {
 
     void genAll(bool isFirst, float startY)
     {
-        int smallPos = UnityEngine.Random.Range(0, 5);
-        float posY = startY + genLevel * brickLength;
-        // 一行墙
-        for (int i = 0; i < 5; i++)
-        {
-            Vector3 pos = new Vector3((i - 2) * brickLength, posY, 0);
-
-            int score = UnityEngine.Random.Range(1, 3);
-            if (!isFirst)
-            {
-                // 高层的数字中，有一个最小，其余的随机。
-                if (i == smallPos)
-                {
-                    score = UnityEngine.Random.Range(1, getBallCount() / 2 + 1);
-                }
-                else
-                {
-                    score = UnityEngine.Random.Range(10, 50);
-                }
-            }
-            initBrick(score, pos, true);
-        }
+        // 一排砖
+        genBlockWall(isFirst, startY);
 
         int level = UnityEngine.Random.Range(10, 20);
 
         // middle
         int type1, type2 = 0;
         int number = 0;
+        float posY = 0;
         List<int> array;
 
         // 中间的每一层
@@ -194,6 +176,32 @@ public class GameController : MonoBehaviour {
         genLevel = level;
     }
 
+    void genBlockWall(bool isFirst, float startY)
+    {
+        int smallPos = UnityEngine.Random.Range(0, 5);
+        float posY = startY + genLevel * brickLength;
+        // 一行墙
+        for (int i = 0; i < 5; i++)
+        {
+            Vector3 pos = new Vector3((i - 2) * brickLength, posY, 0);
+
+            int score = UnityEngine.Random.Range(1, 3);
+            if (!isFirst)
+            {
+                // 高层的数字中，有一个最小，其余的随机。
+                if (i == smallPos)
+                {
+                    score = UnityEngine.Random.Range(1, getBallCount() / 2 + 1);
+                }
+                else
+                {
+                    score = UnityEngine.Random.Range(10, 50);
+                }
+            }
+            initBrick(score, pos, true);
+        }
+    }
+
     void initBrick(int number, Vector3 pos, bool isWall) {
         GameObject brick = GameObject.Instantiate<GameObject>(brick0);
         brick.transform.position = pos;
@@ -241,8 +249,16 @@ public class GameController : MonoBehaviour {
             delVX = 0;
         }
 
-        moveBalls();
-        DestroyWallItems();
+        if (delVX != 0)
+        {
+            isStop = false;
+        }
+
+        if (!isStop)
+        {
+            moveBalls();
+            DestroyWallItems();
+        }
     }
 
     public void ballMoveStart()
@@ -254,6 +270,11 @@ public class GameController : MonoBehaviour {
                 .SetUpdate(true);
         }
         game_status = GAME_STATUS.START;
+    }
+
+    public void stopMove() {
+        delVX = 0;
+        isStop = true;
     }
 
     void moveBalls() {
@@ -274,7 +295,6 @@ public class GameController : MonoBehaviour {
         if (ballList[0].transform.localPosition.y >= stopY && isCrossing)
         {
             isCrossing = false;
-            //camera.transform.position = offsetCamera + new Vector3(0, ballList[0].transform.position.y, ballList[0].transform.position.z);
         }
         
         for (int i = 1; i < ballList.Count; i++)
@@ -282,6 +302,8 @@ public class GameController : MonoBehaviour {
             Vector3 deltaV = ballList[i-1].transform.localPosition - ballList[i].transform.localPosition;
             Vector3 moveV = deltaV - Vector3.Normalize(deltaV) * r * 2;
             ballList[i].transform.localPosition = ballList[i].transform.localPosition + moveV;
+            //ballList[i].transform.localPosition = ballList[i].transform.localPosition + new Vector3(0,moveV.y,0);
+            //ballList[i].transform.GetComponent<Ball>().move(new Vector3(moveV.x,0, 0));
         }
     }
 
@@ -368,11 +390,28 @@ public class GameController : MonoBehaviour {
         {
             GameObject newball = GameObject.Instantiate<GameObject>(ball0);
             newball.transform.SetParent(trail.transform);
-            newball.transform.localPosition = ballList[ballList.Count - 1].transform.localPosition - new Vector3(0, r * 2, 0);
+            newball.SetActive(false);
+           // newball.transform.localPosition = ballList[ballList.Count - 1].transform.localPosition - new Vector3(0, r * 2, 0);
+            StartCoroutine(addBall(newball, i, ballList.Count - 1));
+
             ballList.Add(newball);
             ballCount.text = getBallCount() + "";
         }
     }
+
+    IEnumerator addBall(GameObject newball, int i, int lastIndex)
+    {
+        yield return new WaitForSeconds(i * 0.1f);
+        newball.SetActive(true);
+        newball.transform.localPosition = ballList[lastIndex].transform.localPosition;
+        //Vector3 aa = ballList[lastIndex].transform.localPosition - new Vector3(0, r * 2, 0);
+        //Debug.Log("aa:" + aa);
+        //newball.transform.DOLocalMove(newball.transform.localPosition - new Vector3(0, r * 2, 0), 0.1f)
+        //   .SetEase(Ease.Linear)
+        //   .SetAutoKill(true)
+        //   .SetUpdate(true);
+    }
+
 
     IEnumerator WaitToDestroy(GameObject fx)
     {
