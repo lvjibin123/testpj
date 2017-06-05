@@ -64,15 +64,21 @@ public class GameController : MonoBehaviour {
         Text_ballCount.text = getBallCount() + "";
         for (int i = 0; i < ballList.Count; i++)
         {
-            ballList[i].transform.DOLocalMove(ballList[i].transform.localPosition + new Vector3(0, (ballList.Count - 1 - i) * r * 2, 0), 0.2f)
+            Tweener tweener = ballList[i].transform.DOLocalMove(ballList[i].transform.localPosition + new Vector3(0, (0-i) * r * 2, 0), 0.2f)
                 .SetEase(Ease.Linear)
                 .SetAutoKill(true)
                 .SetUpdate(true);
+            if (i == ballList.Count - 1)
+                tweener.OnComplete(gameStart);
         }
-        game_status = GAME_STATUS.START;
 
+       // game_status = GAME_STATUS.START;
         genBalls();
         genAll(true, ballList[0].transform.localPosition.y);
+    }
+
+    void gameStart() {
+        game_status = GAME_STATUS.START;
     }
 
     void initBallList() {
@@ -117,7 +123,7 @@ public class GameController : MonoBehaviour {
         int number = 0;
         List<int> array;
         float startY = ballList[0].transform.localPosition.y;
-        for (int i = 1; i < genLevel; i++)
+        for (int i = 6; i < 5+genLevel; i++)
         {
             array = new List<int>() { 0, 1, 2, 3, 4 };
             number = UnityEngine.Random.Range(0, 3);
@@ -132,6 +138,7 @@ public class GameController : MonoBehaviour {
 
             }
         }
+        genLevel += 5;
     }
 
     void genAll(bool isFirst, float startY)
