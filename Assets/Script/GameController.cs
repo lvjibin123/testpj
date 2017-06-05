@@ -119,7 +119,8 @@ public class GameController : MonoBehaviour {
 
     void genBalls()
     {
-        genLevel = UnityEngine.Random.Range(5, 11);
+        // 起始5层
+        genLevel = 5;
         int number = 0;
         List<int> array;
         float startY = ballList[0].transform.localPosition.y;
@@ -141,6 +142,7 @@ public class GameController : MonoBehaviour {
         genLevel += 5;
     }
 
+    // 生成一排砖，和砖后面的一组Map
     void genAll(bool isFirst, float startY)
     {
         // 一排砖
@@ -188,8 +190,15 @@ public class GameController : MonoBehaviour {
                 isLVFull = false;
                 for (int j = 0; j < number; j++)
                 {
-                    // 小种类,球的概率1/3
-                    type2 = UnityEngine.Random.Range(0, 3);
+                    if (type1 == 1 && j > 0 && type2 != 0)
+                    {
+                        //遮挡物同一type
+                    }
+                    else
+                    {
+                        // 小种类,球的概率1/3
+                        type2 = UnityEngine.Random.Range(0, 3);
+                    }
                     int ran = UnityEngine.Random.Range(0, array.Count);
                     Vector3 pos = new Vector3((array[ran] - 2) * brickLength, posY, 0);
 
@@ -500,6 +509,8 @@ public class GameController : MonoBehaviour {
     {
         yield return new WaitForSeconds(i * 0.1f);
         newball.SetActive(true);
+        if (lastIndex > ballList.Count - 1)
+            lastIndex = ballList.Count - 1;
         newball.transform.localPosition = ballList[lastIndex].transform.localPosition;
         //Vector3 aa = ballList[lastIndex].transform.localPosition - new Vector3(0, r * 2, 0);
         //Debug.Log("aa:" + aa);
