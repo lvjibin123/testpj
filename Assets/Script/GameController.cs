@@ -133,40 +133,58 @@ public class GameController : MonoBehaviour {
         int level = UnityEngine.Random.Range(10, 20);
 
         // middle
-        int type = 0;
+        int type1, type2 = 0;
         int number = 0;
         List<int> array;
 
         // 中间的每一层
         for (int i = genLevel + 1; i < level + genLevel; i++)
         {
-            array = new List<int>() { 0, 1, 2, 3, 4 }; 
-            number = UnityEngine.Random.Range(0, 3);
+            array = new List<int>() { 0, 1, 2, 3, 4 };
             // 每一层放多少个
-            for (int j = 0; j < number; j++) {
-                type = UnityEngine.Random.Range(0, 3);
+            number = UnityEngine.Random.Range(0, 3);
+            // 大种类，砖和遮挡物不能放在同一层
+            type1 = UnityEngine.Random.Range(0, 2);
+            for (int j = 0; j < number; j++)
+            {
+                // 小种类
+                type2 = UnityEngine.Random.Range(0, 2);
 
                 int ran = UnityEngine.Random.Range(0, array.Count);
                 posY = startY + i * brickLength;
                 Vector3 pos = new Vector3((array[ran] - 2) * brickLength, posY, 0);
 
-                if (type == 0)
+                if (type1 == 0)
                 {
-                    //gainball
-                    int count = UnityEngine.Random.Range(1, getBallCount());
-                    initGainBall(count, pos);
+                    // 砖
+                    if (type2 == 0)
+                    {
+                        //gainball
+                        int count = UnityEngine.Random.Range(1, getBallCount());
+                        initGainBall(count, pos);
+                    }
+                    else if (type2 == 1 && i != level + genLevel - 1 && i != genLevel + 1)
+                    {
+                        //brick 一排砖前面一行和后面一行不会有砖
+                        int score = UnityEngine.Random.Range(10, 50);
+                        initBrick(score, pos, false);
+                    }
                 }
-                else if (type == 1 && i != level + genLevel - 1 && i != genLevel + 1)
+                else
                 {
-                    //brick 一排砖前面一行和后面一行不会有砖
-                    int score = UnityEngine.Random.Range(10, 50);
-                    initBrick(score, pos, false);
-                }
-                else if (type == 2 && array[ran] != 4)
-                {
-                    //bar 
-                    pos = pos + new Vector3(0.5f * brickLength + barWidth, 0, 0); 
-                    initBar(pos);
+                    // 遮挡物
+                    if (type2 == 0)
+                    {
+                        //gainball
+                        int count = UnityEngine.Random.Range(1, getBallCount());
+                        initGainBall(count, pos);
+                    }
+                    else if (type2 == 1 && array[ran] != 4)
+                    {
+                        //bar 
+                        pos = pos + new Vector3(0.5f * brickLength + barWidth, 0, 0);
+                        initBar(pos);
+                    }
                 }
 
                 array.RemoveAt(ran);
