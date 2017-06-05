@@ -5,14 +5,14 @@ using DG.Tweening;
 
 public class GameController : MonoBehaviour {
 
-    Vector3 relativeV = new Vector3(-0.08f, 0.45f, 0);
+    Vector3 relativeV = new Vector3(0, 0.35f, 0);
     public float dirY = 10;
     public float r = 20;
     public float brickLength = 1.115f;
     public float barWidth = 0.006f;
     public GameObject camera;
 
-    GameObject wall;
+    Transform wall;
     GameObject trail;
     GameObject bg;
     List<GameObject> ballList;
@@ -22,7 +22,6 @@ public class GameController : MonoBehaviour {
     TextMesh ballCount;
 
     float delVX;
-    int dir = 0;
     Vector3 offsetBg;
     Vector3 offsetCamera;
     Loops loopdata;
@@ -40,7 +39,7 @@ public class GameController : MonoBehaviour {
 	void Awake () {
         game_status = GAME_STATUS.READY;
         trail = transform.Find("trail").gameObject;
-        wall = transform.Find("wall").gameObject;
+        wall = transform.Find("wall");
         bg = transform.Find("bg").gameObject;
         gameUI = GameObject.Find("GameUI").GetComponent<GameUI>();
         ballCount = transform.Find("ballCount").GetComponent<TextMesh>();
@@ -180,7 +179,7 @@ public class GameController : MonoBehaviour {
     void initBrick(int number, Vector3 pos, bool isWall) {
         GameObject brick = GameObject.Instantiate<GameObject>(brick0);
         brick.transform.position = pos;
-        brick.transform.SetParent(wall.transform, false);
+        brick.transform.SetParent(wall, false);
 
         Brick brickScript = brick.GetComponent<Brick>();
         brickScript.setNumber(number);
@@ -193,7 +192,7 @@ public class GameController : MonoBehaviour {
     {
         GameObject gainball = GameObject.Instantiate<GameObject>(gainball0);
         gainball.transform.position = pos;
-        gainball.transform.SetParent(wall.transform, false);
+        gainball.transform.SetParent(wall, false);
         gainball.GetComponent<GainBall>().setBallCount(number);
     }
 
@@ -201,7 +200,7 @@ public class GameController : MonoBehaviour {
     {
         GameObject bar = GameObject.Instantiate<GameObject>(bar0);
         bar.transform.position = pos;
-        bar.transform.SetParent(wall.transform, false);
+        bar.transform.SetParent(wall, false);
     }
 
     public Color getBrickColor(int score)
@@ -214,7 +213,6 @@ public class GameController : MonoBehaviour {
         if (Input.GetMouseButtonDown(0))
         {
             originV = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            dir = 0;
         }
         else if (Input.GetMouseButton(0))
         {
@@ -226,6 +224,7 @@ public class GameController : MonoBehaviour {
         }
 
         moveBalls();
+        DestroyWallItems();
     }
 
     public void ballMoveStart()
@@ -244,7 +243,8 @@ public class GameController : MonoBehaviour {
             return;
 
        // ballList[0].transform.localPosition = ballList[0].transform.localPosition + new Vector3(delVX, dirY, 0);
-        ballList[0].transform.GetComponent<Ball>().move(new Vector3(delVX, dirY, 0));
+        ballList[0].transform.localPosition = ballList[0].transform.localPosition + new Vector3(0, dirY, 0);
+        ballList[0].transform.GetComponent<Ball>().move(new Vector3(delVX, 0, 0));
         
         if (ballList[0].transform.localPosition.x > 2.7f)
             ballList[0].transform.localPosition = new Vector3(2.7f, ballList[0].transform.localPosition.y, 0);
@@ -264,6 +264,23 @@ public class GameController : MonoBehaviour {
             Vector3 deltaV = ballList[i-1].transform.localPosition - ballList[i].transform.localPosition;
             Vector3 moveV = deltaV - Vector3.Normalize(deltaV) * r * 2;
             ballList[i].transform.localPosition = ballList[i].transform.localPosition + moveV;
+        }
+    }
+
+    void DestroyWallItems() {
+        if (ballList == null || ballList.Count == 0)
+            return;
+
+        float ball_y = ballList[0].transform.localPosition.y;
+        for (int i = 0; i < wall.childCount; i++)
+        {
+            if (ball_y - wall.GetChild(i).localPosition.y >= 4.365f)
+            {
+                Destroy(wall.GetChild(i).gameObject);
+            }
+            else {
+                break;
+            }
         }
     }
 

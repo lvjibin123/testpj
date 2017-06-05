@@ -131,6 +131,7 @@ public class CharacterController2D : MonoBehaviour
 
 	#region Movement Methods
 
+
     void moveDir(ref Vector3 deltaMovement)
     {
         var rayDistance = Mathf.Sqrt(deltaMovement.x*deltaMovement.x+deltaMovement.y*deltaMovement.y) + _skinWidth;
@@ -174,7 +175,7 @@ public class CharacterController2D : MonoBehaviour
             else {
                 _raycastHit = Physics2D.Raycast(ray, deltaMovement, rayDistance, platformMask);
             }
-            //Debug.DrawRay(rayorigin[i], deltaD, Color.red, 2, false);
+            Debug.DrawRay(rayorigin[i], deltaD, Color.red, 2, false);
 
             if (_raycastHit)
             {

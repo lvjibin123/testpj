@@ -59,22 +59,22 @@ public class Ball : MonoBehaviour {
         Debug.Log("onTriggerExitEvent: " + col.gameObject.name);
     }
 
-    //void OnCollisionEnter2D(Collision2D coll)
-    //{
-    //    if (gameController.isFirstBall(gameObject))
-    //    {
-    //        if (coll.gameObject.name.Contains("brick"))
-    //        {
-    //            // 只能从底部碰撞
-    //            if (coll.transform.localPosition.y - 1.115f / 2 < transform.position.y)
-    //                return;
+    void OnCollisionEnter2D(Collision2D coll)
+    {
+        if (gameController.isFirstBall(gameObject))
+        {
+            if (coll.gameObject.name.Contains("brick"))
+            {
+                // 只能从底部碰撞
+                if (coll.transform.localPosition.y - 1.115f / 2 < transform.position.y)
+                    return;
 
-    //            gameController.hitBrick(coll.gameObject);
-    //        }
-    //        else if (coll.gameObject.name.Contains("gainball"))
-    //        {
-    //            gameController.gainBall(coll.gameObject);
-    //        }
-    //    }
-    //}
+                gameController.hitBrick(coll.gameObject);
+            }
+            else if (coll.gameObject.name.Contains("gainball"))
+            {
+                gameController.gainBall(coll.gameObject);
+            }
+        }
+    }
 }
