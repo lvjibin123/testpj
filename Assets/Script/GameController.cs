@@ -5,7 +5,7 @@ using DG.Tweening;
 
 public class GameController : MonoBehaviour {
 
-    Vector3 relativeV = new Vector3(-0.08f, 0.8f, 0);
+    Vector3 relativeV = new Vector3(-0.08f, 0.45f, 0);
     public float dirY = 10;
     public float r = 20;
     public float brickLength = 1.115f;
@@ -242,19 +242,21 @@ public class GameController : MonoBehaviour {
     void moveBalls() {
         if (ballList == null || ballList.Count == 0)
             return;
-        if (ballList[0].transform.localPosition.x + delVX > 2.7f)
-            ballList[0].transform.localPosition = new Vector3(2.7f, ballList[0].transform.localPosition.y + dirY, 0);
-        else if (ballList[0].transform.localPosition.x + delVX < -2.7f)
-            ballList[0].transform.localPosition = new Vector3(-2.7f, ballList[0].transform.localPosition.y + dirY, 0);
-        else
-            ballList[0].transform.localPosition = ballList[0].transform.localPosition + new Vector3(delVX, dirY, 0);
+
+       // ballList[0].transform.localPosition = ballList[0].transform.localPosition + new Vector3(delVX, dirY, 0);
+        ballList[0].transform.GetComponent<Ball>().move(new Vector3(delVX, dirY, 0));
+        
+        if (ballList[0].transform.localPosition.x > 2.7f)
+            ballList[0].transform.localPosition = new Vector3(2.7f, ballList[0].transform.localPosition.y, 0);
+        else if (ballList[0].transform.localPosition.x < -2.7f)
+            ballList[0].transform.localPosition = new Vector3(-2.7f, ballList[0].transform.localPosition.y, 0);
 
         ballCount.transform.position = ballList[0].transform.localPosition + relativeV;
 
         if (ballList[0].transform.localPosition.y >= stopY && isCrossing)
         {
             isCrossing = false;
-            camera.transform.position = offsetCamera + new Vector3(0, ballList[0].transform.position.y, ballList[0].transform.position.z);
+            //camera.transform.position = offsetCamera + new Vector3(0, ballList[0].transform.position.y, ballList[0].transform.position.z);
         }
         
         for (int i = 1; i < ballList.Count; i++)

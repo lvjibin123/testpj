@@ -4,9 +4,6 @@ using System;
 using System.Collections.Generic;
 
 
-namespace Prime31 {
-
-[RequireComponent( typeof( BoxCollider2D ))]
 public class CharacterController2D : MonoBehaviour
 {
 
@@ -42,25 +39,18 @@ public class CharacterController2D : MonoBehaviour
 	public LayerMask platformMask = 0;
 
 	/// <summary>
-	/// mask with all layers that trigger events should fire when intersected
-	/// </summary>
-	public LayerMask triggerMask = 0;
-
-	/// <summary>
 	/// mask with all layers that should act as one-way platforms. Note that one-way platforms should always be EdgeCollider2Ds. This is because it does not support being
 	/// updated anytime outside of the inspector for now.
 	/// </summary>
 	[SerializeField]
 	LayerMask oneWayPlatformMask = 0;
 
-    float moveSpeed;
     bool isEventActive;
 
 
 	[HideInInspector][NonSerialized]
 	public new Transform transform;
 	[HideInInspector][NonSerialized]
-	public BoxCollider2D boxCollider;
 
 	#endregion
 
@@ -84,7 +74,6 @@ public class CharacterController2D : MonoBehaviour
 
 		// cache some components
 		transform = GetComponent<Transform>();
-		boxCollider = GetComponent<BoxCollider2D>();
 
 		// here, we trigger our properties that have setters with bodies
 		skinWidth = _skinWidth;
@@ -118,13 +107,9 @@ public class CharacterController2D : MonoBehaviour
 	#endregion
 
 
-    public void move(Vector3 deltaMovement, float moveSpeed)
+    public void move(Vector3 deltaMovement)
     {
-        this.moveSpeed = moveSpeed;
-
         _raycastHitsThisFrame.Clear();
-
-        primeRaycastOrigins();
 
         if (_raycastHitsThisFrame.Count == 0)
             moveDir(ref deltaMovement);
@@ -145,14 +130,6 @@ public class CharacterController2D : MonoBehaviour
 
 
 	#region Movement Methods
-
-	void primeRaycastOrigins()
-	{
-		// our raycasts need to be fired from the bounds inset by the skinWidth
-		var modifiedBounds = boxCollider.bounds;
-		modifiedBounds.Expand( -2f * _skinWidth );
-
-	}
 
     void moveDir(ref Vector3 deltaMovement)
     {
@@ -263,7 +240,6 @@ public class CharacterController2D : MonoBehaviour
                         || (_raycastTmp.normal.y < 0 && transform.position.x > _raycastTmp.point.x && transform.position.y < _raycastTmp.point.y))
                     {
                         //右上斜面, 右下斜面
-                        //calcDeltaXY(ref xx, ref yy, deltaDTmp, distance, 0.078f);
                         calcDeltaXY2(ref xx, ref yy, deltaDTmp, rayPointD);
                     }
                     else
@@ -278,7 +254,6 @@ public class CharacterController2D : MonoBehaviour
                         || (_raycastTmp.normal.y < 0 && transform.position.x < _raycastTmp.point.x && transform.position.y < _raycastTmp.point.y))
                     {
                         //左上斜面, 左下斜面
-                        //calcDeltaXY(ref xx, ref yy, deltaDTmp, distance, -0.078f);
                         calcDeltaXY2(ref xx, ref yy, deltaDTmp, rayPointD);
                     }
                     else
@@ -341,4 +316,4 @@ public class CharacterController2D : MonoBehaviour
 
 	#endregion
 
-}}
+}
