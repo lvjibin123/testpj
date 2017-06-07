@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class Brick : MonoBehaviour {
 
-	// Use this for initialization
     float delta = -1;
     int number = 1;
     Vector3 move;

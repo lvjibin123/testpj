@@ -30,6 +30,8 @@ public class GameController : MonoBehaviour {
     bool isCrossing = false;
     int genLevel = 0;
     bool isStop = false;
+    // 为排除一排撞两个
+    float brickP = 0;
 
     //prefab
     GameObject brick0;
@@ -76,18 +78,12 @@ public class GameController : MonoBehaviour {
                 tweener.OnComplete(gameStart);
         }
 
-       // game_status = GAME_STATUS.START;
         genBalls();
         genAll(true, ballList[0].transform.localPosition.y);
     }
 
     void gameStart() {
         game_status = GAME_STATUS.START;
-
-      //  delVX = 1;
-      //   moveBalls(new Vector3(1, dirY, 0));
-      //   delVX = 0;
-     //    moveBalls(new Vector3(0, dirY, 0));
     }
 
     void initBallList() {
@@ -424,10 +420,6 @@ public class GameController : MonoBehaviour {
             }
             else
             {
-                //Debug.Log("index " + index);
-                //Debug.Log("ballList.Count " + ballList.Count);
-                //Debug.Log("i " + i);
-                //Debug.Log("newPos.Count " + newPos.Count);
                 if (Mathf.Abs(ballList[index].transform.localPosition.x - newPos[i - 1].x) < r * 2)
                 {
                     // 转角
@@ -435,42 +427,17 @@ public class GameController : MonoBehaviour {
                     Vector3 ball2 = ballList[index].transform.localPosition;
                     Vector3 ball3 = ballList[index + 1].transform.localPosition;
 
-                    if (Mathf.Abs(ball3.x - ball2.x) > 0.000001f && Mathf.Abs(ball3.y - ball2.y) > 0.000001f)
-                    {
-                        Vector3 ptInter1 = Vector3.zero;
-                        Vector3 ptInter2 = Vector3.zero;
-                        Vector3 endP = ball2 + (ball3 - ball2) * 10;
-                        LineInterCircle(ball2, endP, ball1, 2 * 2 * r * r, ref ptInter1, ref ptInter2);
-                        if (ptInter1.x < 65536 && ptInter1.y < 65536)
-                            newPos.Add(ptInter1);
-                        else if (ptInter2.x < 65536 && ptInter2.y < 65536)
-                            newPos.Add(ptInter2);
-                        else
-                        {
-                            newPos.Add(ball3);
-                            //Debug.Log("noPoint");
-                            //Debug.Log("i " + i);
-                            //Debug.Log("delVX " + delVX);
-                            //Debug.Log("ball1 " + ball1);
-                            //Debug.Log("ball2 " + ball2);
-                            //Debug.Log("ball3 " + ball3);
-                        }
-                    }
+                    Vector3 ptInter1 = Vector3.zero;
+                    Vector3 ptInter2 = Vector3.zero;
+                    Vector3 endP = ball2 + (ball3 - ball2) * 10;
+                    LineInterCircle(ball2, endP, ball1, 2 * 2 * r * r, ref ptInter1, ref ptInter2);
+                    if (ptInter1.x < 65536 && ptInter1.y < 65536)
+                        newPos.Add(ptInter1);
+                    else if (ptInter2.x < 65536 && ptInter2.y < 65536)
+                        newPos.Add(ptInter2);
                     else
                     {
-                        if (Mathf.Abs(ball3.x - ball2.x) < 0.000001f)
-                        {
-                            // 竖排
-
-                            float yy = Mathf.Sqrt(2 * r * 2 * r - (ball1.x - ball2.x) * (ball1.x - ball2.x));
-                            float y = ball1.y - yy;
-                            Vector3 newBall = new Vector3(ball2.x, y, 0);
-                            newPos.Add(newBall);
-                        }
-                        else
-                        {
-                            newPos.Add(ball3);
-                        }
+                        newPos.Add(ball3);
                     }
 
                     index++;
@@ -482,10 +449,14 @@ public class GameController : MonoBehaviour {
             }
         }
 
-
-        for (int i = 0; i < newPos.Count; i++)
+        ballList[0].transform.localPosition = ballList[0].transform.localPosition + new Vector3(0, dirY, 0);
+        ballList[0].transform.GetComponent<Ball>().move(new Vector3(delVX, 0, 0));
+        for (int i = 1; i < newPos.Count; i++)
         {
-            ballList[i].transform.localPosition = newPos[i];
+            if (i < ballList.Count)
+                ballList[i].transform.localPosition = newPos[i];
+            else
+                break;
         }
     }
 
@@ -586,7 +557,7 @@ public class GameController : MonoBehaviour {
         float ball_y = ballList[0].transform.localPosition.y;
         for (int i = 0; i < wall.childCount; i++)
         {
-            if (ball_y - wall.GetChild(i).localPosition.y >= 4.365f)
+            if (ball_y - wall.GetChild(i).localPosition.y >= 4.9f)
             {
                 Destroy(wall.GetChild(i).gameObject);
             }
@@ -657,6 +628,12 @@ public class GameController : MonoBehaviour {
         isCrossing = true;
 
         gameUI.updateScore();
+
+        for (int i = ballList.Count - 1; i >=1; i--)
+        {
+            ballList[i].transform.localPosition = new Vector3(ballList[i - 1].transform.localPosition.x, ballList[i].transform.localPosition.y, 0);
+        }
+
         Destroy(ballList[0]);
         ballList.RemoveAt(0);
 
@@ -678,20 +655,17 @@ public class GameController : MonoBehaviour {
 
             brick.GetComponent<Brick>().destropyBrick();
 
-            if (brick.GetComponent<Brick>().getWall())
-                genAll(false, brick.transform.localPosition.y);
+            if (brick.GetComponent<Brick>().getWall() && brickP < brick.transform.localPosition.y)
+            {
+                brickP = brick.transform.localPosition.y;
+                genAll(false, brickP);
+            }
         }
     }
 
     //得到新球
     public void gainBall(GameObject gainball)
     {
-
-        //var Fx_frag = GameObject.Instantiate<GameObject>(Frag0);
-        //Fx_frag.transform.position = ball.transform.position;
-        //Fx_frag.transform.SetParent(wall.transform, false);
-        //StartCoroutine(WaitToDestroy(Fx_frag));
-
         int count = gainball.GetComponent<GainBall>().getCount();
         Destroy(gainball);
         for (int i = 0; i < count; i++)
@@ -699,7 +673,6 @@ public class GameController : MonoBehaviour {
             GameObject newball = GameObject.Instantiate<GameObject>(ball0);
             newball.transform.SetParent(trail.transform);
             newball.SetActive(false);
-           // newball.transform.localPosition = ballList[ballList.Count - 1].transform.localPosition - new Vector3(0, r * 2, 0);
             StartCoroutine(addBall(newball, i, ballList.Count - 1));
 
             ballList.Add(newball);
