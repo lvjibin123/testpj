@@ -122,10 +122,10 @@ public class GameController : MonoBehaviour {
     }
 
     void FixedUpdate() {
-        //if (game_status == GAME_STATUS.START)
-        //{
-        //    checkClick();
-        //}
+        if (game_status == GAME_STATUS.START)
+        {
+            checkClick();
+        }
     }
 
     void LateUpdate()
@@ -460,6 +460,8 @@ public class GameController : MonoBehaviour {
         {
             for (int i = 1; i < ballList.Count; i++)
             {
+                if (!ballList[i].activeSelf)
+                    break;
                 Vector3 moveV = Vector3.Normalize(vector) * r * 2 * i;
                 if (Mathf.Abs(moveV.x) < Mathf.Abs(vector.x))
                 {
@@ -479,12 +481,14 @@ public class GameController : MonoBehaviour {
 
                         Vector3 ptInter1 = Vector3.zero;
                         Vector3 ptInter2 = Vector3.zero;
-                        LineInterCircle(ball3, endP, ball1, 2 * 2 * r * r, ref ptInter1, ref ptInter2);
+                        LineInterCircle((ball3 - endP) * 10 + endP, endP, ball1, 2 * 2 * r * r, ref ptInter1, ref ptInter2);
                         //if (ptInter1.x < 65536 && ptInter1.y < 65536)
                         //    newPos.Add(ptInter1);
                         //else 
                         if (ptInter2.x < 65536 && ptInter2.y < 65536)
+                        {
                             newPos.Add(ptInter2);
+                        }
                         else
                         {
                             newPos.Add(ballList[index + 1].transform.localPosition + new Vector3(delVX, dirY, 0));
@@ -494,7 +498,11 @@ public class GameController : MonoBehaviour {
                     }
                     else
                     {
-                        newPos.Add(ballList[index + 1].transform.localPosition + new Vector3(delVX, dirY, 0));
+                        Vector3 vector2 = ballList[index].transform.localPosition - newPos[i - 1];
+                        Vector3 moveV2 = Vector3.Normalize(vector2) * r * 2;
+                        Vector3 vec = newPos[i - 1] + moveV2;
+                        newPos.Add(vec);
+                       // newPos.Add(ballList[index + 1].transform.localPosition + new Vector3(delVX, dirY, 0));
                     }
                 }
             }
@@ -518,8 +526,8 @@ public class GameController : MonoBehaviour {
         }
 
         // 清除向量
-        while (dirList.Count > 0 && ballList[ballList.Count - 1].transform.position.y > dirList[0].y)
-        {
+        while (dirList.Count > 0 && ballList[0].transform.position.y - (ballList.Count - 1) *2 *r > dirList[0].y)
+            {
             dirList.RemoveAt(0);
         }
     }
@@ -853,6 +861,7 @@ public class GameController : MonoBehaviour {
             newball.transform.SetParent(trail.transform);
             newball.SetActive(false);
             StartCoroutine(addBall(newball, i, ballList.Count - 1));
+           // newball.transform.localPosition = ballList[ballList.Count - 1].transform.localPosition - new Vector3(0, r * 2, 0);
 
             ballList.Add(newball);
             Text_ballCount.text = getBallCount() + "";
