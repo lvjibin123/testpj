@@ -122,10 +122,10 @@ public class GameController : MonoBehaviour {
     }
 
     void FixedUpdate() {
-        //if (game_status == GAME_STATUS.START)
-        //{
-        //    checkClick();
-        //}
+        if (game_status == GAME_STATUS.START)
+        {
+            checkClick();
+        }
     }
 
     void LateUpdate()
@@ -474,53 +474,34 @@ public class GameController : MonoBehaviour {
                 }
                 else
                 {
-                    //if (i == 1)
-                    //{
-                    //    newPos.Add(ballList[i].transform.localPosition);
-                    //}
-                    //else
+
+                    Vector3 ball1 = newPos[i - 1];
+                    Vector3 ball2 = Vector3.zero;
+                    Vector3 ball3 = Vector3.zero;
+                    Vector3 endP = Vector3.zero;
+                    calculateBallPos(ref ball1, ref ball2, ref ball3, ref endP);
+
+                    Vector3 ptInter1 = Vector3.zero;
+                    Vector3 ptInter2 = Vector3.zero;
+                    LineInterCircle(ball3, endP, ball1, 2 * 2 * r * r, ref ptInter1, ref ptInter2);
+                    //if (ptInter1.x < 65536 && ptInter1.y < 65536)
+                    //    newPos.Add(ptInter1);
+                    //else 
+                    if (ptInter2.x < 65536 && ptInter2.y < 65536)
                     {
-                        if (Mathf.Abs(ballList[index].transform.localPosition.x - newPos[i - 1].x) < r * 2)
-                        {
-                            // 转角
-                            Vector3 ball1 = newPos[i - 1];
-                            Vector3 ball2 = Vector3.zero;
-                            Vector3 ball3 = Vector3.zero;
-                            Vector3 endP = Vector3.zero;
-                            calculateBallPos(ref ball1, ref ball2, ref ball3, ref endP);
-
-                            Vector3 ptInter1 = Vector3.zero;
-                            Vector3 ptInter2 = Vector3.zero;
-                            LineInterCircle(ball3, endP, ball1, 2 * 2 * r * r, ref ptInter1, ref ptInter2);
-                            //if (ptInter1.x < 65536 && ptInter1.y < 65536)
-                            //    newPos.Add(ptInter1);
-                            //else 
-                            if (ptInter2.x < 65536 && ptInter2.y < 65536)
-                            {
-                                newPos.Add(ptInter2);
-                            }
-                            else
-                            {
-                                Vector3 vector2 = endP - ball3;
-                                Vector3 moveV2 = Vector3.Normalize(vector2) * r * 2;
-                                Vector3 vec = ball1 + moveV2;
-                                newPos.Add(vec);
-                                newPos.Add(ballList[i].transform.localPosition);
-                                //newPos.Add(ballList[index + 1].transform.localPosition + new Vector3(delVX, dirY, 0));
-                            }
-
-                            index++;
-                        }
-                        else
-                        {
-                            Vector3 vector2 = ballList[index].transform.localPosition - newPos[i - 1];
-                            Vector3 moveV2 = Vector3.Normalize(vector2) * r * 2;
-                            Vector3 vec = newPos[i - 1] + moveV2;
-                            newPos.Add(vec);
-                            newPos.Add(ballList[i].transform.localPosition);
-                            // newPos.Add(ballList[index + 1].transform.localPosition + new Vector3(delVX, dirY, 0));
-                        }
+                        newPos.Add(ptInter2);
                     }
+                    else
+                    {
+                        Vector3 vector2 = endP - ball3;
+                        Vector3 moveV2 = Vector3.Normalize(vector2) * r * 2;
+                        Vector3 vec = ball1 + moveV2;
+                        newPos.Add(vec);
+                        newPos.Add(ballList[i].transform.localPosition);
+                        //newPos.Add(ballList[index + 1].transform.localPosition + new Vector3(delVX, dirY, 0));
+                    }
+
+                    index++;
                 }
             }
         }
