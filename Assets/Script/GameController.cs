@@ -31,7 +31,7 @@ public class GameController : MonoBehaviour {
     int genLevel = 0;
     bool isStop = false;
     // 为排除一排撞两个
-    float brickP = 0;
+    float brickP = -2;
 
     //prefab
     GameObject brick0;
@@ -67,6 +67,7 @@ public class GameController : MonoBehaviour {
         initBallList();
         Text_ballCount.text = getBallCount() + "";
         delVX = 0;
+        brickP = -2;
 
         for (int i = 0; i < ballList.Count; i++)
         {
@@ -84,6 +85,22 @@ public class GameController : MonoBehaviour {
 
     void gameStart() {
         game_status = GAME_STATUS.START;
+    } 
+
+   // List<float> moveList = new List<float>() {0.1f,0.2f,0.3f,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5f,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+   // List<float> moveList = new List<float>() { 0.03124992f, 0.0520833f, 0.03645843f, 0.05208347f, 0.0781247f, 0.04687528f, 0.03124976f, 0.01041669f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    List<float> moveList = new List<float>() { 0.1875f, 0.3489586f, 0.2864583f, 0.1458334f, 0, 0, -0.2760419f, -0.7604166f, -0.8802083f,
+        -0.03125f, 0, 0.1197917f, 0.583333f, 1.208333f, 0.06770831f, 0, 0, -0.2187499f, -0.3645833f, -0.01041669f, 0, 0.03125008f, 
+        0.1458334f, 0.1093748f, 0, -0.1093748f, -0.6510419f, -0.7552083f, -0.2083334f, 0, 0.01041663f, 0.1614585f, 0.04687488f, 0.04687488f,
+        0.04687488f, 0.04687488f, 0.04687488f };
+    int moveIndex = 0;
+
+    public void onMoveClick() {
+        if (moveList.Count > moveIndex) {
+            delVX = moveList[moveIndex];
+            moveIndex++;
+            moveBalls();
+        }
     }
 
     void initBallList() {
@@ -105,10 +122,10 @@ public class GameController : MonoBehaviour {
     }
 
     void FixedUpdate() {
-        if (game_status == GAME_STATUS.START)
-        {
-            checkClick();
-        }
+        //if (game_status == GAME_STATUS.START)
+        //{
+        //    checkClick();
+        //}
     }
 
     void LateUpdate()
@@ -380,24 +397,16 @@ public class GameController : MonoBehaviour {
     List<Vector3> dirList = new List<Vector3>();
     List<Vector3> newPos = new List<Vector3>();
 
+    int dirIndex = 0;
+
     void moveBalls()
     {
+       // Debug.Log("delVX : " + delVX);
         if (ballList == null || ballList.Count == 0)
             return;
 
         newPos.Clear();
-        dirList.Clear();
-        for (int i = 0; i < ballList.Count - 1; i++)
-        {
-            dirList.Add(ballList[i].transform.localPosition - ballList[i + 1].transform.localPosition);
-        }
-
         newPos.Add(ballList[0].transform.localPosition + new Vector3(delVX, dirY, 0));
-
-        if (newPos[0].x > 2.7f)
-            newPos[0] = new Vector3(2.7f, newPos[0].y, 0);
-        else if (newPos[0].x < -2.7f)
-            newPos[0] = new Vector3(-2.7f, newPos[0].y, 0);
 
         Text_ballCount.transform.position = newPos[0] + relativeV;
 
@@ -407,50 +416,99 @@ public class GameController : MonoBehaviour {
         }
 
         Vector3 vector = new Vector3(delVX, dirY, 0);
-        int index = 0;
 
-
-        for (int i = 1; i < ballList.Count; i++)
+        if (dirList.Count == 0)
         {
-            Vector3 moveV = Vector3.Normalize(vector) * r * 2 * i;
-            if (Mathf.Abs(moveV.x) < Mathf.Abs(vector.x))
+            if (Mathf.Abs(delVX) > 0.000001f)
             {
-                Vector3 vec = newPos[0] - moveV;
-                newPos.Add(vec);
+                dirList.Add(ballList[0].transform.localPosition);
+                dirList.Add(newPos[0]);
+            }
+        }
+        else
+        {
+            // 矫正
+            dirList[dirList.Count - 1] = ballList[0].transform.localPosition;
+            if (dirList.Count == 1)
+            {
+                if (Mathf.Abs(delVX) > 0.000001f)
+                {
+                    dirList.Add(newPos[0]);
+                }
             }
             else
             {
-                if (Mathf.Abs(ballList[index].transform.localPosition.x - newPos[i - 1].x) < r * 2)
-                {
-                    // 转角
-                    Vector3 ball1 = newPos[i - 1];
-                    Vector3 ball2 = ballList[index].transform.localPosition;
-                    Vector3 ball3 = ballList[index + 1].transform.localPosition;
-
-                    Vector3 ptInter1 = Vector3.zero;
-                    Vector3 ptInter2 = Vector3.zero;
-                    Vector3 endP = ball2 + (ball3 - ball2) * 10;
-                    LineInterCircle(ball2, endP, ball1, 2 * 2 * r * r, ref ptInter1, ref ptInter2);
-                    if (ptInter1.x < 65536 && ptInter1.y < 65536)
-                        newPos.Add(ptInter1);
-                    else if (ptInter2.x < 65536 && ptInter2.y < 65536)
-                        newPos.Add(ptInter2);
-                    else
+                if (Mathf.Abs(delVX) < 0.000001f && Mathf.Abs(dirList[dirList.Count - 1].x - newPos[0].x) < 0.000001f)
                     {
-                        newPos.Add(ball3);
-                    }
-
-                    index++;
+                    //垂直
+                    dirList[dirList.Count - 1] = newPos[0];
+                }
+                else if (Mathf.Abs((dirList[dirList.Count - 1].x - dirList[dirList.Count - 2].x) * dirY - (dirList[dirList.Count - 1].y - dirList[dirList.Count - 2].y) * delVX) > 0.000001f)
+                {
+                    dirList.Add(newPos[0]);
                 }
                 else
                 {
-                    newPos.Add(ballList[index + 1].transform.localPosition);
+                    dirList[dirList.Count - 1] = newPos[0];
                 }
             }
         }
 
+        int index = 0;
+        dirIndex = 0;
+        if (dirList.Count > 1)
+        {
+            for (int i = 1; i < ballList.Count; i++)
+            {
+                Vector3 moveV = Vector3.Normalize(vector) * r * 2 * i;
+                if (Mathf.Abs(moveV.x) < Mathf.Abs(vector.x))
+                {
+                    Vector3 vec = newPos[0] - moveV;
+                    newPos.Add(vec);
+                }
+                else
+                {
+                    if (Mathf.Abs(ballList[index].transform.localPosition.x - newPos[i - 1].x) < r * 2)
+                    {
+                        // 转角
+                        Vector3 ball1 = newPos[i - 1];
+                        Vector3 ball2 = Vector3.zero;
+                        Vector3 ball3 = Vector3.zero;
+                        Vector3 endP = Vector3.zero;
+                        calculateBallPos(ref ball1, ref ball2, ref ball3, ref endP);
+
+                        Vector3 ptInter1 = Vector3.zero;
+                        Vector3 ptInter2 = Vector3.zero;
+                        LineInterCircle(ball3, endP, ball1, 2 * 2 * r * r, ref ptInter1, ref ptInter2);
+                        //if (ptInter1.x < 65536 && ptInter1.y < 65536)
+                        //    newPos.Add(ptInter1);
+                        //else 
+                        if (ptInter2.x < 65536 && ptInter2.y < 65536)
+                            newPos.Add(ptInter2);
+                        else
+                        {
+                            newPos.Add(ballList[index + 1].transform.localPosition + new Vector3(delVX, dirY, 0));
+                        }
+
+                        index++;
+                    }
+                    else
+                    {
+                        newPos.Add(ballList[index + 1].transform.localPosition + new Vector3(delVX, dirY, 0));
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (int i = 1; i < ballList.Count; i++)
+            {
+                newPos.Add(ballList[i].transform.localPosition + new Vector3(0, dirY, 0));
+            }
+        }
+
         ballList[0].transform.localPosition = ballList[0].transform.localPosition + new Vector3(0, dirY, 0);
-        ballList[0].transform.GetComponent<Ball>().move(new Vector3(delVX, 0, 0));
+        ballList[0].transform.GetComponent<Ball>().move(new Vector3(newPos[0].x - ballList[0].transform.localPosition.x, 0, 0));
         for (int i = 1; i < newPos.Count; i++)
         {
             if (i < ballList.Count)
@@ -458,7 +516,128 @@ public class GameController : MonoBehaviour {
             else
                 break;
         }
+
+        // 清除向量
+        while (dirList.Count > 0 && ballList[ballList.Count - 1].transform.position.y > dirList[0].y)
+        {
+            dirList.RemoveAt(0);
+        }
     }
+
+    void calculateBallPos(ref Vector3 ball1, ref Vector3 ball2, ref Vector3 ball3, ref Vector3 endP) {
+        if (dirList.Count - dirIndex >= 2)
+        {
+            ball2 = dirList[dirList.Count - 2 - dirIndex];
+            ball3 = dirList[dirList.Count - 1 - dirIndex];
+            // endP = ball2;
+            endP = ball3 + (ball2 - ball3) * 10;
+
+            Vector3 ballV = ball1 - ball2;
+            if ((ballV.x * ballV.x + ballV.y * ballV.y) < r * 2 * r * 2)
+            {
+                dirIndex++;
+                if (dirList.Count - dirIndex >= 2)
+                {
+                    ball2 = dirList[dirList.Count - 2 - dirIndex];
+                    ball3 = dirList[dirList.Count - 1 - dirIndex];
+                    // endP = ball2;
+                    endP = ball3 + (ball2 - ball3) * 10;
+
+                    calculateBallPos(ref ball1, ref ball2, ref ball3, ref endP);
+                }
+                else if (dirList.Count - dirIndex >= 1)
+                {
+                    ball3 = dirList[dirList.Count - 1 - dirIndex];
+                    endP = ball3 + new Vector3(0, -10, 0);
+                }
+            }
+        }
+        else
+        {
+            ball3 = dirList[dirList.Count - 1 - dirIndex];
+            endP = ball3 + new Vector3(0, -10, 0);
+        }
+    }
+
+    //void moveBalls()
+    //{
+    //    if (ballList == null || ballList.Count == 0)
+    //        return;
+
+    //    newPos.Clear();
+    //    dirList.Clear();
+
+    //    for (int i = 0; i < ballList.Count - 1; i++)
+    //    {
+    //        dirList.Add(ballList[i].transform.localPosition - ballList[i + 1].transform.localPosition);
+    //    }
+
+    //    newPos.Add(ballList[0].transform.localPosition + new Vector3(delVX, dirY, 0));
+
+    //    //if (newPos[0].x > 2.7f)
+    //    //    newPos[0] = new Vector3(2.7f, newPos[0].y, 0);
+    //    //else if (newPos[0].x < -2.7f)
+    //    //    newPos[0] = new Vector3(-2.7f, newPos[0].y, 0);
+
+    //    Text_ballCount.transform.position = newPos[0] + relativeV;
+
+    //    if (newPos[0].y >= stopY && isCrossing)
+    //    {
+    //        isCrossing = false;
+    //    }
+
+    //    Vector3 vector = new Vector3(delVX, dirY, 0);
+    //    int index = 0;
+
+    //    for (int i = 1; i < ballList.Count; i++)
+    //    {
+    //        Vector3 moveV = Vector3.Normalize(vector) * r * 2 * i;
+    //        if (Mathf.Abs(moveV.x) < Mathf.Abs(vector.x))
+    //        {
+    //            Vector3 vec = newPos[0] - moveV;
+    //            newPos.Add(vec);
+    //        }
+    //        else
+    //        {
+    //            if (Mathf.Abs(ballList[index].transform.localPosition.x - newPos[i - 1].x) < r * 2)
+    //            {
+    //                // 转角
+    //                Vector3 ball1 = newPos[i - 1];
+    //                Vector3 ball2 = ballList[index].transform.localPosition;
+    //                Vector3 ball3 = ballList[index + 1].transform.localPosition;
+
+    //                Vector3 ptInter1 = Vector3.zero;
+    //                Vector3 ptInter2 = Vector3.zero;
+    //                Vector3 endP = ball2 + (ball3 - ball2) * 10;
+    //                LineInterCircle(ball2, endP, ball1, 2 * 2 * r * r, ref ptInter1, ref ptInter2);
+    //                if (ptInter1.x < 65536 && ptInter1.y < 65536)
+    //                    newPos.Add(ptInter1);
+    //                else if (ptInter2.x < 65536 && ptInter2.y < 65536)
+    //                    newPos.Add(ptInter2);
+    //                else
+    //                {
+    //                    newPos.Add(ball3);
+    //                }
+
+    //                index++;
+    //            }
+    //            else
+    //            {
+    //                newPos.Add(ballList[index + 1].transform.localPosition);
+    //            }
+    //        }
+    //    }
+
+    //    ballList[0].transform.localPosition = ballList[0].transform.localPosition + new Vector3(0, dirY, 0);
+    //    ballList[0].transform.GetComponent<Ball>().move(new Vector3(newPos[0].x-ballList[0].transform.localPosition.x, 0, 0));
+    //    for (int i = 1; i < newPos.Count; i++)
+    //    {
+    //        if (i < ballList.Count)
+    //            ballList[i].transform.localPosition = newPos[i];
+    //        else
+    //            break;
+    //    }
+    //}
 
     /// <summary>
     /// 线段与圆的交点
