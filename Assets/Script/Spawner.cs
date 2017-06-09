@@ -11,6 +11,8 @@ namespace SnakeBalls
         public float beginLineBottom = 9.6f;
         public int column = 5;
         public Vector2 cellSize = new Vector2(1.115f, 1.115f);
+        public float barWidth = 0.006f;
+
         private HashSet<Spawner.Coordinates> startingPhaseBallCoordinates = new HashSet<Spawner.Coordinates>();
         private int currentLine;
         private int currentIntervalHeight;
@@ -184,8 +186,8 @@ namespace SnakeBalls
                             }
                             if (a > 0)
                             {
-                                // flag == true wall
-                                gameController.initBrick(Random.Range(num5, a + 1), zero, flag2);
+                                // flag == true  is wall
+                                gameController.initBrick(Random.Range(num5, a + 1), zero);
                             }
                         }
                         if (flag5 && !this.secondPhase)
@@ -194,7 +196,7 @@ namespace SnakeBalls
                         }
                         if (flag1 && !this.startingPhase && (!this.secondPhase && j < this.column - 1) && (double)Random.Range(0.0f, 1f) <= (double)instance.barProbability)
                         {
-                            zero = zero + new Vector3(0.5f * this.cellSize.x + 0.006f, (currentIntervalHeight + 1) * 0.5f * this.cellSize.y, 0);
+                            zero = zero + new Vector3(0.5f * this.cellSize.x + barWidth, (currentIntervalHeight + 1) * 0.5f * this.cellSize.y, 0);
                             if (this.currentIntervalHeight == 2)
                             {
                                 gameController.initBar2(zero);

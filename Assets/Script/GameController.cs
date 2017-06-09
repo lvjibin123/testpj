@@ -8,8 +8,6 @@ public class GameController : MonoBehaviour {
     public int ballCount = 4;
     public float dirY = 0.04f;
     public float r = 20;
-    public float brickLength = 1.115f;
-    public float barWidth = 0.006f;
     public float trailResolution = 0.1f;
     public GameObject camera;
 
@@ -33,8 +31,6 @@ public class GameController : MonoBehaviour {
     bool isCrossing = false;
     int genLevel = 0;
     bool isStop = false;
-    // 为排除一排撞两个
-    float brickP = -2;
 
     //prefab
     GameObject brick0;
@@ -74,7 +70,6 @@ public class GameController : MonoBehaviour {
         initBallList();
         Text_ballCount.text = getBallCount() + "";
         delVX = 0;
-        brickP = -2;
 
         this.dirList.Clear();
         this.dirList.Add(ballList[0].transform.position);
@@ -133,7 +128,7 @@ public class GameController : MonoBehaviour {
     ///       3、一层中只能有一种遮挡条。
     /// </summary>
 
-    public void initBrick(int number, Vector3 pos, bool isWall) {
+    public void initBrick(int number, Vector3 pos) {
         GameObject brick = GameObject.Instantiate<GameObject>(brick0);
         brick.transform.position = pos;
         brick.transform.SetParent(wall, false);
@@ -141,8 +136,6 @@ public class GameController : MonoBehaviour {
         Brick brickScript = brick.GetComponent<Brick>();
         brickScript.setNumber(number);
         brickScript.setColor(getBrickColor(number));
-        if (isWall)
-            brickScript.setWall();
     }
 
     public void initGainBall(Vector3 pos, int number)
@@ -210,13 +203,14 @@ public class GameController : MonoBehaviour {
         if (ballList == null || ballList.Count == 0)
             return;
 
-        ballList[0].transform.localPosition = ballList[0].transform.localPosition + new Vector3(0, dirY, 0);
-        ballList[0].transform.GetComponent<Ball>().move(new Vector3(delVX, 0, 0));
-
         if (ballList[0].transform.localPosition.x > 2.67f)
             ballList[0].transform.localPosition = new Vector3(2.67f, ballList[0].transform.localPosition.y, 0);
         else if (ballList[0].transform.localPosition.x < -2.67f)
             ballList[0].transform.localPosition = new Vector3(-2.67f, ballList[0].transform.localPosition.y, 0);
+
+
+        ballList[0].transform.localPosition = ballList[0].transform.localPosition + new Vector3(0, dirY, 0);
+        ballList[0].transform.GetComponent<Ball>().move(new Vector3(delVX, 0, 0));
 
         //ballList[0].transform.localPosition = ballList[0].transform.localPosition + new Vector3(delVX, dirY, 0);
         Text_ballCount.transform.localPosition = ballList[0].transform.localPosition + relativeV;
@@ -343,6 +337,7 @@ public class GameController : MonoBehaviour {
         isCrossing = true;
 
         gameUI.updateScore();
+        changeDirY();
         Destroy(ballList[0]);
         ballList.RemoveAt(0);
 
@@ -376,11 +371,29 @@ public class GameController : MonoBehaviour {
             StartCoroutine(WaitToDestroy(Fx_boom));
 
             brick.GetComponent<Brick>().destropyBrick();
+        }
+    }
 
-            if (brick.GetComponent<Brick>().getWall() && brickP < brick.transform.localPosition.y)
-            {
-                brickP = brick.transform.localPosition.y;
-            }
+    void changeDirY() {
+        int score = gameUI.getScore();
+        if (score < 100)
+        {
+            dirY = score * 1.0f / 100 * 0.01f + 0.04f;
+        }
+        else if (score < 200 && score >= 100)
+        {
+            dirY = (score - 100) * 1.0f / 100 * 0.01f + 0.05f;
+        }
+        else if (score < 300 && score >= 200)
+        {
+            dirY = 0.06f;
+        }
+        else if (score < 500 && score >= 300)
+        {
+            dirY = (score - 300) * 1.0f / 200 * 0.02f + 0.06f;
+        }
+        else {
+            dirY = 0.08f;
         }
     }
 

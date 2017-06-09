@@ -10,7 +10,6 @@ public class Brick : MonoBehaviour {
     GameObject Text_number;
     GameObject brick0;
     GameController gameController;
-    bool isWall = false;
 
     public void setNumber(int number) {
         this.number = number;
@@ -26,14 +25,6 @@ public class Brick : MonoBehaviour {
         else {
             Text_number.GetComponent<TextMesh>().fontSize = 36;
         }
-    }
-
-    public void setWall() {
-        isWall = true;
-    }
-
-    public bool getWall() {
-        return isWall;
     }
 
     public void setColor(Color color0)
