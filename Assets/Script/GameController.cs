@@ -35,7 +35,6 @@ public class GameController : MonoBehaviour {
     bool isStop = false;
     // 为排除一排撞两个
     float brickP = -2;
-    int dirIndex = 0;
 
     //prefab
     GameObject brick0;
@@ -45,6 +44,10 @@ public class GameController : MonoBehaviour {
     GameObject bar2;
     GameObject gainball0;
     GameObject blockball0;
+
+    public GAME_STATUS getGameStatus() {
+        return game_status;
+    }
 
 	void Awake () {
         game_status = GAME_STATUS.READY;
@@ -72,19 +75,6 @@ public class GameController : MonoBehaviour {
         Text_ballCount.text = getBallCount() + "";
         delVX = 0;
         brickP = -2;
-
-        //for (int i = 0; i < ballList.Count; i++)
-        //{
-        //    Tweener tweener = ballList[i].transform.DOLocalMove(ballList[i].transform.localPosition + new Vector3(0, (0 - i) * r * 2, 0), 0.2f)
-        //        .SetEase(Ease.Linear)
-        //        .SetAutoKill(true)
-        //        .SetUpdate(true);
-        //    if (i == ballList.Count - 1)
-        //        tweener.OnComplete(gameStart);
-        //}
-
-        genBalls();
-        genAll(true, ballList[0].transform.localPosition.y);
 
         this.dirList.Clear();
         this.dirList.Add(ballList[0].transform.position);
@@ -136,45 +126,6 @@ public class GameController : MonoBehaviour {
         }
     }
 
-    void genBalls()
-    {
-        // 起始5层
-        genLevel = 5;
-        int number = 0;
-        List<int> array;
-        float startY = ballList[0].transform.localPosition.y;
-        for (int i = 6; i < 5+genLevel; i++)
-        {
-            array = new List<int>() { 0, 1, 2, 3, 4 };
-            number = UnityEngine.Random.Range(0, 3);
-            for (int j = 0; j < number; j++)
-            {
-                int ran = UnityEngine.Random.Range(0, array.Count);
-                float posY = startY + i * brickLength;
-                Vector3 pos = new Vector3((array[ran] - 2) * brickLength, posY, 0);
-                initGainBall(pos);
-
-                array.RemoveAt(ran);
-
-            }
-        }
-        genLevel += 5;
-    }
-
-    int getRandomNum() {
-        List<int> brickNum = new List<int>();
-        for (int i = 0; i < 4 ; i++)
-        {
-            brickNum.Add(i);
-            if (i > 0)
-            {
-                brickNum.Add(i);
-            }
-        }
-        int index = UnityEngine.Random.Range(0, brickNum.Count);
-        return brickNum[index];
-    }
-
     // 生成一排砖，和砖后面的一组Map
     /// <summary>
     /// 规则：1、除了一排砖以外，每层砖数不超过2
@@ -182,144 +133,7 @@ public class GameController : MonoBehaviour {
     ///       3、一层中只能有一种遮挡条。
     /// </summary>
 
-    void genAll(bool isFirst, float startY)
-    {
-        // 一排砖
-        genBlockWall(isFirst, startY);
-
-        int level = UnityEngine.Random.Range(10, 20);
-
-        // middle
-        // 大种类 0-砖块，1-遮挡物
-        int type1 = 0;
-        int type2 = 0;
-        // 每一层放多少个
-        int number = 0;
-        // 下层是否放满
-        bool isLVFull = false;
-        float posY = 0;
-        List<int> array;
-        
-        // 中间的每一层
-        for (int i = genLevel + 1; i < level + genLevel; i++)
-        {
-            array = new List<int>() { 0, 1, 2, 3, 4 };
-            number = getRandomNum();
-            posY = startY + i * brickLength;
-            if (isLVFull)
-            {
-                isLVFull = false;
-                // 只放小球
-                for (int j = 0; j < number; j++)
-                {
-                    // 小种类,球的概率1/3
-                    type2 = UnityEngine.Random.Range(0, 3);
-                    int ran = UnityEngine.Random.Range(0, array.Count);
-                    Vector3 pos = new Vector3((array[ran] - 2) * brickLength, posY, 0);
-                    if (type2 == 0)
-                    {
-                        //gainball
-                        initGainBall(pos);
-                    }
-                }
-            }
-            else
-            {
-                isLVFull = false;
-                type1 = 1 - type1;
-                if (type1 == 1) {
-                    // 遮挡物只有4个位置
-                    array.Remove(4);
-                }
-                for (int j = 0; j < number; j++)
-                {
-                    if (type1 == 1 && j > 0 && type2 != 0)
-                    {
-                        //遮挡物同一type
-                    }
-                    else
-                    {
-                        // 小种类,球的概率1/3
-                        type2 = UnityEngine.Random.Range(0, 3);
-                    }
-                    int ran = UnityEngine.Random.Range(0, array.Count);
-                    Vector3 pos = new Vector3((array[ran] - 2) * brickLength, posY, 0);
-
-                    if (type1 == 0)
-                    {
-                        // 砖
-                        if (type2 == 0)
-                        {
-                            //gainball
-                            initGainBall(pos);
-                        }
-                        else if (i != level + genLevel - 1 && i != genLevel + 1 && j < 2)
-                        {
-                            //brick 一排砖前面一行和后面一行不会有砖
-                            //一行最多两个
-                            int score = UnityEngine.Random.Range(10, 50);
-                            initBrick(score, pos, false);
-                        }
-                    }
-                    else
-                    {
-                        // 遮挡物
-                        if (type2 == 0)
-                        {
-                            //gainball
-                            initGainBall(pos);
-                        }
-                        else if (type2 == 1)
-                        {
-                            //bar 
-                            pos = pos + new Vector3(0.5f * brickLength + barWidth, 0, 0);
-                            initBar(pos);
-                        }
-                        else if (type2 == 2 && (level + genLevel - i > 2))
-                        {
-                            //bar2 
-                            pos = pos + new Vector3(0.5f * brickLength + barWidth, brickLength / 2, 0);
-                            initBar2(pos);
-                            // 下一层只能有小球
-                            isLVFull = true;
-                        }
-                    }
-
-                    array.RemoveAt(ran);
-                }
-            }
-        }
-
-        genLevel = level;
-    }
-
-    void genBlockWall(bool isFirst, float startY)
-    {
-        int smallPos = UnityEngine.Random.Range(0, 5);
-        float posY = startY + genLevel * brickLength;
-        // 一行墙
-        for (int i = 0; i < 5; i++)
-        {
-            Vector3 pos = new Vector3((i - 2) * brickLength, posY, 0);
-
-            int score = UnityEngine.Random.Range(1, 3);
-            if (!isFirst)
-            {
-                // 高层的数字中，有一个最小，其余的随机。
-                if (i == smallPos)
-                {
-                    score = UnityEngine.Random.Range(1, getBallCount() / 2 + 1);
-                }
-                else
-                {
-                    score = UnityEngine.Random.Range(10, 50);
-                }
-            }
-            initBrick(score, pos, true);
-        }
-    }
-
-    void initBrick(int number, Vector3 pos, bool isWall) {
+    public void initBrick(int number, Vector3 pos, bool isWall) {
         GameObject brick = GameObject.Instantiate<GameObject>(brick0);
         brick.transform.position = pos;
         brick.transform.SetParent(wall, false);
@@ -331,23 +145,22 @@ public class GameController : MonoBehaviour {
             brickScript.setWall();
     }
 
-    void initGainBall(Vector3 pos)
+    public void initGainBall(Vector3 pos, int number)
     {
-        int count = UnityEngine.Random.Range(1, 6);
         GameObject gainball = GameObject.Instantiate<GameObject>(gainball0);
         gainball.transform.position = pos;
         gainball.transform.SetParent(wall, false);
-        gainball.GetComponent<GainBall>().setBallCount(count);
+        gainball.GetComponent<GainBall>().setBallCount(number);
     }
 
-    void initBar(Vector3 pos)
+    public void initBar(Vector3 pos)
     {
         GameObject bar = GameObject.Instantiate<GameObject>(bar0);
         bar.transform.position = pos;
         bar.transform.SetParent(wall, false);
     }
 
-    void initBar2(Vector3 pos)
+    public void initBar2(Vector3 pos)
     {
         GameObject bar = GameObject.Instantiate<GameObject>(bar2);
         bar.transform.position = pos;
@@ -567,7 +380,6 @@ public class GameController : MonoBehaviour {
             if (brick.GetComponent<Brick>().getWall() && brickP < brick.transform.localPosition.y)
             {
                 brickP = brick.transform.localPosition.y;
-                genAll(false, brickP);
             }
         }
     }
