@@ -17,6 +17,8 @@ public class GameUI : MonoBehaviour {
     Transform Rate;
     Text Text_best;
     Text Text_score;
+    Text Over_score;
+    Text Over_best;
     AudioSource audio;
     AudioClipSet audioclip_set;
 
@@ -39,6 +41,8 @@ public class GameUI : MonoBehaviour {
         gameController = GameObject.Find("Game").transform.GetComponent<GameController>();
         Menu = transform.Find("Menu");
         GameOver = transform.Find("GameOver");
+        Over_score = GameOver.Find("Text_score").GetComponent<Text>();
+        Over_best = GameOver.Find("Text_best").GetComponent<Text>();
         Text_best = Menu.Find("Text_best").GetComponent<Text>();
         Text_score = transform.Find("GameScene").Find("Text_score").GetComponent<Text>();
         Rate = transform.Find("Rate");
@@ -76,7 +80,7 @@ public class GameUI : MonoBehaviour {
     {
         if (Input.GetMouseButtonUp(0))
         {
-            if (Menu.localPosition.y == 0)
+            if (Menu.localPosition.y == 0 && Input.mousePosition.y < 1750 && Input.mousePosition.y >= 550)
             {
                 onStartBtnClick();
             }
@@ -185,8 +189,16 @@ public class GameUI : MonoBehaviour {
         Text_score.text = score + "";
     }
 
-    public void gameOver() { 
-    
+    public void gameOver() {
+        GameOver.localPosition = new Vector3(0, 0, 0);
+        Over_score.text = score + "";
+        Over_best.text = PlayerPrefs.GetInt("BestScore", 0) + "";
+    }
+
+    public void moreLifeClick() { 
+        // 复活
+        GameOver.localPosition = new Vector3(0, 1920, 0);
+        gameController.reviveStart(8);
     }
 
     public void onTutorialClick()

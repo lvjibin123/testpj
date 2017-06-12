@@ -8,6 +8,7 @@ public class GameController : MonoBehaviour {
     public int ballCount = 4;
     public float dirY = 0.04f;
     public float r = 20;
+    public float initY = -1.25f;
     public float trailResolution = 0.1f;
     public GameObject camera;
     public Spawner spawner;
@@ -79,8 +80,9 @@ public class GameController : MonoBehaviour {
 
     public void ballMoveStart()
     {
+        trail.transform.GetChild(0).localPosition = new Vector3(0, -1.25f, 0);
         isCrossing = false;
-        initBallList();
+        initBallList(ballCount);
         Text_ballCount.text = getBallCount() + "";
         delVX = 0;
 
@@ -91,11 +93,23 @@ public class GameController : MonoBehaviour {
         spawner.OnLoadGame();
     }
 
-    void initBallList() {
+    public void reviveStart(int count)
+    {
+        isCrossing = false;
+        initBallList(count);
+        Text_ballCount.text = getBallCount() + "";
+        delVX = 0;
+        this.dirList.Clear();
+        this.dirList.Add(ballList[0].transform.position);
+        game_status = GAME_STATUS.START;
+
+    }
+
+    void initBallList(int count)
+    {
         ballList = new List<GameObject>();
         GameObject firstBall = trail.transform.GetChild(0).gameObject;
-        firstBall.transform.localPosition = new Vector3(0, -1.25f, 0);
-        for (int i = 0; i < ballCount; i++)
+        for (int i = 0; i < count; i++)
         {
             GameObject newball = GameObject.Instantiate<GameObject>(ball0);
             newball.transform.SetParent(trail.transform);
@@ -108,7 +122,9 @@ public class GameController : MonoBehaviour {
         }
 
         offsetBg = bg.transform.position - ballList[0].transform.position;
+        offsetBg.x = 0;
         offsetCamera = camera.transform.position - ballList[0].transform.position;
+        offsetCamera.x = 0;
     }
 
     void FixedUpdate() {
@@ -118,6 +134,7 @@ public class GameController : MonoBehaviour {
         }
     }
 
+    //float currentVelocity = 0.0f;
     void LateUpdate()
     {
         if (isCrossing)
@@ -131,7 +148,6 @@ public class GameController : MonoBehaviour {
             //camera.transform.position = position;
         }
     }
-    float currentVelocity = 0.0f;
 
     // 生成一排砖，和砖后面的一组Map
     /// <summary>
@@ -306,10 +322,7 @@ public class GameController : MonoBehaviour {
         AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.game_over);
 
         game_status = GAME_STATUS.READY;
-        Text_ballCount.text = "";
-        destroyWallChild();
-        destroyBallChild();
-     //   gameUI.initMenu();
+       // Text_ballCount.text = "";
         gameUI.gameOver();
     }
 
@@ -319,27 +332,6 @@ public class GameController : MonoBehaviour {
         {
             Destroy(wall.transform.GetChild(i).gameObject);
         }
-    }
-
-    void destroyBallChild()
-    {
-        if (ballList == null || ballList.Count == 0)
-        {
-
-            GameObject newball = GameObject.Instantiate<GameObject>(ball0);
-            newball.transform.SetParent(trail.transform);
-            newball.transform.localPosition = new Vector3(0, -1.25f, 0);
-
-            bg.transform.position = offsetBg + new Vector3(0, newball.transform.position.y, newball.transform.position.z);
-            camera.transform.position = offsetCamera + new Vector3(0, newball.transform.position.y, newball.transform.position.z);
-            return;
-        }
-
-        for (int i = 1; i < ballList.Count; i++)
-        {
-            Destroy(ballList[i]);
-        }
-        ballList.Clear();
     }
 
     //碰到砖块
@@ -354,15 +346,16 @@ public class GameController : MonoBehaviour {
         isCrossing = true;
 
         gameUI.updateScore();
-        changeDirY();
-        Destroy(ballList[0]);
-        ballList.RemoveAt(0);
-
-        if (ballList.Count == 0)
+        if (ballList.Count == 1)
         {
+            currentBrick = brick;
             gameOver();
             return;
         }
+        
+        changeDirY();
+        Destroy(ballList[0]);
+        ballList.RemoveAt(0);
 
         ballList[0].transform.GetComponent<CircleCollider2D>().enabled = true;
         Vector3 positionVisual = this.ballList[0].transform.localPosition;
