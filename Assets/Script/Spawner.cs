@@ -24,6 +24,10 @@ public class Spawner : MonoBehaviour
 
     GameController gameController;
 
+    public float getLineHeight(int lineCount) {
+        return (currentLine + lineCount) * cellSize.y;
+    }
+
     void Awake()
     {
         gameController = GameObject.Find("Game").GetComponent<GameController>();

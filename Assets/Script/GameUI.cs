@@ -187,6 +187,8 @@ public class GameUI : MonoBehaviour {
         Menu.localPosition = new Vector3(0, 0, 0);
         score = 0;
         Text_score.text = score + "";
+        GameOver.localPosition = new Vector3(0, 1920, 0);
+        gameController.clearBg();
     }
 
     public void gameOver() {

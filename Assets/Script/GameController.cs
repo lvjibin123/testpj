@@ -81,6 +81,9 @@ public class GameController : MonoBehaviour {
     public void ballMoveStart()
     {
         trail.transform.GetChild(0).localPosition = new Vector3(0, -1.25f, 0);
+        camera.transform.localPosition = new Vector3(0, 0, -100);
+        bg.transform.localPosition = new Vector3(0, 0, 1);
+
         isCrossing = false;
         initBallList(ballCount);
         Text_ballCount.text = getBallCount() + "";
@@ -95,6 +98,7 @@ public class GameController : MonoBehaviour {
 
     public void reviveStart(int count)
     {
+        RemoveWallItems(2);
         isCrossing = false;
         initBallList(count);
         Text_ballCount.text = getBallCount() + "";
@@ -103,6 +107,24 @@ public class GameController : MonoBehaviour {
         this.dirList.Add(ballList[0].transform.position);
         game_status = GAME_STATUS.START;
 
+    }
+
+    public void clearBg()
+    {
+        for (int i = 0; i < wall.childCount; i++)
+        {
+            Destroy(wall.GetChild(i).gameObject);
+        }
+    }
+
+    void RemoveWallItems(int lineCount) {
+        float num = spawner.getLineHeight(lineCount);
+        for (int i = 0; i < wall.childCount; i++) {
+            if (wall.GetChild(i).localPosition.y < num)
+            {
+                Destroy(wall.GetChild(i).gameObject);
+            }
+        }
     }
 
     void initBallList(int count)
@@ -326,14 +348,6 @@ public class GameController : MonoBehaviour {
         gameUI.gameOver();
     }
 
-    void destroyWallChild()
-    {
-        for (int i = 0; i < wall.transform.childCount; i++)
-        {
-            Destroy(wall.transform.GetChild(i).gameObject);
-        }
-    }
-
     //碰到砖块
     public void hitBrick(GameObject brick)
     {
@@ -348,7 +362,6 @@ public class GameController : MonoBehaviour {
         gameUI.updateScore();
         if (ballList.Count == 1)
         {
-            currentBrick = brick;
             gameOver();
             return;
         }
