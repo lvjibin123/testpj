@@ -11,12 +11,14 @@ public class GameUI : MonoBehaviour {
 
     GameController gameController;
     Transform Menu;
+    Transform GameOver;
+    Transform Shop;
+    Transform Tutorial;
+    Transform Rate;
+    Text Text_best;
     Text Text_score;
     AudioSource audio;
     AudioClipSet audioclip_set;
-    GameObject Tutorial;
-    GameObject Rate;
-    GameObject Shop;
 
     int score = 0;
     int deltaCoin = -1;
@@ -36,18 +38,21 @@ public class GameUI : MonoBehaviour {
 	void Start () {
         gameController = GameObject.Find("Game").transform.GetComponent<GameController>();
         Menu = transform.Find("Menu");
+        GameOver = transform.Find("GameOver");
+        Text_best = Menu.Find("Text_best").GetComponent<Text>();
         Text_score = transform.Find("GameScene").Find("Text_score").GetComponent<Text>();
-        Rate = transform.Find("Rate").gameObject;
-        Shop = transform.Find("Shop").gameObject;
+        Rate = transform.Find("Rate");
+        Shop = transform.Find("Shop");
+        Tutorial = transform.Find("Tutorial");
 
         initMenu();
 
         audio = GetComponent<AudioSource>();
         GameObject go_audioclip = GameObject.Find("AudioClipSet");
-        Tutorial = GameObject.Find("Tutorial");
-        Tutorial.SetActive(false);
-        Rate.SetActive(false);
         Shop.transform.localPosition = new Vector3(0, 1960, 0);
+        GameOver.localPosition = new Vector3(0, 1960, 0);
+        Tutorial.localPosition = new Vector3(0, 1960, 0);
+        Rate.localPosition = new Vector3(0, 1960, 0);
 
         if (go_audioclip)
         {
@@ -64,6 +69,18 @@ public class GameUI : MonoBehaviour {
     void Update()
     {
         //addCoin();
+        checkClick();
+    }
+
+    public void checkClick()
+    {
+        if (Input.GetMouseButtonUp(0))
+        {
+            if (Menu.localPosition.y == 0)
+            {
+                onStartBtnClick();
+            }
+        }
     }
 
     // 动态增长金币。
@@ -84,7 +101,7 @@ public class GameUI : MonoBehaviour {
 
     public void popRateWind()
     {
-        Rate.SetActive(true);
+        Rate.localPosition = new Vector3(0, 0, 0);
     }
 
     public void onRateClick()
@@ -104,7 +121,7 @@ public class GameUI : MonoBehaviour {
         {
     //        addCoinDynamic(BallzConstants.RATE_COIN);
         }
-        Rate.SetActive(false);
+        Rate.localPosition = new Vector3(0, 1960, 0);
    //     onGameOver();
     }
 
@@ -162,14 +179,19 @@ public class GameUI : MonoBehaviour {
 
     public void initMenu()
     {
+        Text_best.text = PlayerPrefs.GetInt("BestScore", 0) + "";
         Menu.localPosition = new Vector3(0, 0, 0);
         score = 0;
         Text_score.text = score + "";
     }
 
+    public void gameOver() { 
+    
+    }
+
     public void onTutorialClick()
     {
         AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.button_click);
-        Tutorial.SetActive(true);
+        Tutorial.localPosition = new Vector3(0, 0, 0);
     }
 }

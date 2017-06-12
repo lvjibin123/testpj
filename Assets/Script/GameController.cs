@@ -309,7 +309,8 @@ public class GameController : MonoBehaviour {
         Text_ballCount.text = "";
         destroyWallChild();
         destroyBallChild();
-        gameUI.initMenu();
+     //   gameUI.initMenu();
+        gameUI.gameOver();
     }
 
     void destroyWallChild()

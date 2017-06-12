@@ -50,7 +50,7 @@ public class TutorialController : MonoBehaviour {
 
     public void onCloseClick()
     {
-        gameObject.SetActive(false);
+        transform.localPosition = new Vector3(0, 1920, 0);
   //      soundBtn.GetComponent<AudioController>().playSound();
     }
 
