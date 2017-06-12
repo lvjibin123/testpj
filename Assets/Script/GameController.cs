@@ -10,6 +10,7 @@ public class GameController : MonoBehaviour {
     public float r = 20;
     public float trailResolution = 0.1f;
     public GameObject camera;
+    public Spawner spawner;
 
     Transform wall;
     GameObject trail;
@@ -74,14 +75,9 @@ public class GameController : MonoBehaviour {
         this.dirList.Clear();
         this.dirList.Add(ballList[0].transform.position);
         game_status = GAME_STATUS.START;
-    }
 
-    void gameStart() {
-        this.dirList.Clear();
-        game_status = GAME_STATUS.START;
-        this.dirList.Add(ballList[0].transform.position);
-        this.dirList.Add(this.dirList[0]);
-    } 
+        spawner.OnLoadGame();
+    }
 
     void initBallList() {
         ballList = new List<GameObject>();
@@ -118,8 +114,12 @@ public class GameController : MonoBehaviour {
         {
             bg.transform.position = offsetBg + new Vector3(0, ballList[0].transform.position.y, ballList[0].transform.position.z);
             camera.transform.position = offsetCamera + new Vector3(0, ballList[0].transform.position.y, ballList[0].transform.position.z);
+            //Vector3 position = camera.transform.position;
+            //position.y = Mathf.SmoothDamp(position.y - offsetCamera.y, ballList[0].transform.position.y, ref currentVelocity, Time.deltaTime) + offsetCamera.y;
+            //camera.transform.position = position;
         }
     }
+    float currentVelocity = 0.0f;
 
     // 生成一排砖，和砖后面的一组Map
     /// <summary>
