@@ -42,6 +42,10 @@ public class GameController : MonoBehaviour {
     GameObject gainball0;
     GameObject blockball0;
 
+    AudioSource audio;
+    public AudioClipSet audioclip_set;
+
+
     public GAME_STATUS getGameStatus() {
         return game_status;
     }
@@ -63,6 +67,14 @@ public class GameController : MonoBehaviour {
         Boom0 = (GameObject)Resources.Load("FX/Boom");
         loopdata = JsonUtil.LoadColorFromFile();
 
+
+        audio = GetComponent<AudioSource>();
+        GameObject go_audioclip = GameObject.Find("AudioClipSet");
+
+        if (go_audioclip)
+        {
+            audioclip_set = go_audioclip.GetComponent<AudioClipSet>();
+        }
     }
 
     public void ballMoveStart()
@@ -291,6 +303,8 @@ public class GameController : MonoBehaviour {
     }
 
     void gameOver() {
+        AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.game_over);
+
         game_status = GAME_STATUS.READY;
         Text_ballCount.text = "";
         destroyWallChild();
@@ -330,6 +344,8 @@ public class GameController : MonoBehaviour {
     //碰到砖块
     public void hitBrick(GameObject brick)
     {
+        AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.hit);
+
         delVX = 0;
         // 减球
         stopY = ballList[0].transform.localPosition.y;
@@ -400,6 +416,8 @@ public class GameController : MonoBehaviour {
     //得到新球
     public void gainBall(GameObject gainball)
     {
+        AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.gain_ball);
+
         int count = gainball.GetComponent<GainBall>().getCount();
         Destroy(gainball);
         for (int i = 0; i < count; i++)
