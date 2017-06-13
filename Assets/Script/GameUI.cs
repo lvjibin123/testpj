@@ -8,6 +8,7 @@ public class GameUI : MonoBehaviour {
     public static float base_height = 1920;
     public static float base_width = 1080;
     public int rate_reward = 20;
+    public int reviveBall = 8;
 
     GameController gameController;
     Transform Menu;
@@ -21,12 +22,16 @@ public class GameUI : MonoBehaviour {
     Text Text_sheildCount;
     Text Over_score;
     Text Over_best;
+    Transform Button_more;
+    Text Over_more;
     AudioSource audio;
     AudioClipSet audioclip_set;
 
     int score = 0;
     int deltaCoin = -1;
     int coinFrame = 1;
+    float reviveDelta = -1;
+    int currentReviveBall;
 
     public int getScore()
     {
@@ -49,6 +54,8 @@ public class GameUI : MonoBehaviour {
         Tutorial = transform.Find("Tutorial");
         Over_score = GameOver.Find("Text_score").GetComponent<Text>();
         Over_best = GameOver.Find("Text_best").GetComponent<Text>();
+        Button_more = GameOver.Find("Button_more");
+        Over_more = Button_more.Find("Text_more").GetComponent<Text>();
         Text_best = Menu.Find("Text_best").GetComponent<Text>();
         Text_score = GameScene.Find("Text_score").GetComponent<Text>();
         Text_sheildCount = GameScene.Find("Text_count").GetComponent<Text>();
@@ -78,6 +85,24 @@ public class GameUI : MonoBehaviour {
     void Update()
     {
         //addCoin();
+        checkRevive();
+    }
+
+    void checkRevive() {
+        if (Mathf.Abs(reviveDelta + 1) > 0.000001f) {
+            if (reviveDelta > 0)
+            {
+                reviveDelta -= Time.deltaTime;
+                if (currentReviveBall != (int)Mathf.Ceil(reviveDelta)) {
+                    currentReviveBall = (int)Mathf.Ceil(reviveDelta);
+                    Over_more.text = "One More Life With " + currentReviveBall + " Balls";
+                }
+            }
+            else {
+                reviveDelta = -1;
+                Button_more.gameObject.SetActive(false);
+            }
+        }
     }
 
     // 动态增长金币。
@@ -199,15 +224,23 @@ public class GameUI : MonoBehaviour {
     }
 
     public void gameOver() {
+        // 倒计时
         GameOver.localPosition = new Vector3(0, 0, 0);
         Over_score.text = score + "";
         Over_best.text = PlayerPrefs.GetInt("BestScore", 0) + "";
+        reviveDelta = reviveBall;
+        currentReviveBall = reviveBall;
+        Over_more.text = "One More Life With " + currentReviveBall + " Balls";
+        Button_more.gameObject.SetActive(true);
     }
 
-    public void moreLifeClick() { 
+    public void moreLifeClick()
+    {
         // 复活
         GameOver.localPosition = new Vector3(0, 1920, 0);
-        gameController.reviveStart(8);
+        int count = (int)Mathf.Ceil(reviveDelta);
+        if (count > 0)
+            gameController.reviveStart(count);
     }
 
     public void onTutorialClick()
