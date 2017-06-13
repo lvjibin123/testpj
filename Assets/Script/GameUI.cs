@@ -146,10 +146,10 @@ public class GameUI : MonoBehaviour {
     {
         if (isAdd)
         {
-    //        addCoinDynamic(BallzConstants.RATE_COIN);
+            addCoinDynamic(Constants.RATE_SHIELD);
         }
-        Rate.localPosition = new Vector3(0, 1960, 0);
-   //     onGameOver();
+        Rate.localPosition = new Vector3(0, 1920, 0);
+        gameOver();
     }
 
     //增加金币
@@ -233,13 +233,13 @@ public class GameUI : MonoBehaviour {
         initMenu();
     }
 
-    public void gameOver(bool isFirst) {
+    public void gameOver() {
         music.Stop();
         // 倒计时
         GameOver.localPosition = Vector3.zero;
         Over_score.text = score + "";
         Over_best.text = PlayerPrefs.GetInt("BestScore", 0) + "";
-        if (isFirst)
+        if (gameController.getIsFirst())
         {
             AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.time_down);
             reviveDelta = reviveBall;

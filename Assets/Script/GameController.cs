@@ -11,7 +11,8 @@ public class GameController : MonoBehaviour {
     public float initY = -1.25f;
     public float trailResolution = 0.1f;
     public GameObject camera;
-    public float sheildCooling = 3;
+    // Shield 冷却时间
+    public float shieldCooling = 3;
     public Spawner spawner;
 
     AudioSource audio;
@@ -38,7 +39,10 @@ public class GameController : MonoBehaviour {
     bool isCrossing = false;
     // 碰到bar停止移动
     bool isStop = false;
+    // 是否第一次玩，决定是否能复活
     bool isFirst = true;
+    // rate
+    int popRateCount;
 
     //prefab
     GameObject brick0;
@@ -50,8 +54,13 @@ public class GameController : MonoBehaviour {
     GameObject blockball0;
 
 
-    public GAME_STATUS getGameStatus() {
+    public GAME_STATUS getGameStatus()
+    {
         return game_status;
+    }
+
+    public bool getIsFirst() {
+        return isFirst;
     }
 
 	void Awake () {
@@ -111,7 +120,7 @@ public class GameController : MonoBehaviour {
     }
 
     public void useSheild() {
-        sheildTime = sheildCooling;
+        sheildTime = shieldCooling;
         ballList[0].transform.GetComponent<SpriteRenderer>().color = Color.red;
     }
 
@@ -368,10 +377,28 @@ public class GameController : MonoBehaviour {
 
     void gameOver() {
         AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.game_over);
-
         game_status = GAME_STATUS.READY;
-       // Text_ballCount.text = "";
-        gameUI.gameOver(isFirst);
+
+        //时间大于一定值，并且五次结束pop rate
+        Debug.Log("popRateCount" + popRateCount);
+        int isRate = PlayerPrefs.GetInt("isRate");
+        if (isRate == 0)
+        {
+            popRateCount++;
+            if (popRateCount >= Constants.RATE_COUNT)
+            {
+                popRateCount = 0;
+                gameUI.popRateWind();
+            }
+            else
+            {
+                gameUI.gameOver();
+            }
+        }
+        else
+        {
+            gameUI.gameOver();
+        }
     }
 
     //碰到砖块
