@@ -11,6 +11,7 @@ public class GameController : MonoBehaviour {
     public float initY = -1.25f;
     public float trailResolution = 0.1f;
     public GameObject camera;
+    public float sheildCooling = 3;
     public Spawner spawner;
 
     Transform wall;
@@ -33,6 +34,7 @@ public class GameController : MonoBehaviour {
     bool isCrossing = false;
     int genLevel = 0;
     bool isStop = false;
+    float sheildTime = -1;
 
     //prefab
     GameObject brick0;
@@ -80,10 +82,6 @@ public class GameController : MonoBehaviour {
 
     public void ballMoveStart()
     {
-        trail.transform.GetChild(0).localPosition = new Vector3(0, -1.25f, 0);
-        camera.transform.localPosition = new Vector3(0, 0, -100);
-        bg.transform.localPosition = new Vector3(0, 0, 1);
-
         isCrossing = false;
         initBallList(ballCount);
         Text_ballCount.text = getBallCount() + "";
@@ -109,12 +107,22 @@ public class GameController : MonoBehaviour {
 
     }
 
-    public void clearBg()
+    public void useSheild() {
+        sheildTime = sheildCooling;
+        ballList[0].transform.GetComponent<SpriteRenderer>().color = Color.red;
+    }
+
+    // 初始化
+    public void initMap()
     {
         for (int i = 0; i < wall.childCount; i++)
         {
             Destroy(wall.GetChild(i).gameObject);
         }
+
+        trail.transform.GetChild(0).localPosition = new Vector3(0, -1.25f, 0);
+        camera.transform.localPosition = new Vector3(0, 0, -100);
+        bg.transform.localPosition = new Vector3(0, 0, 1);
     }
 
     void RemoveWallItems(int lineCount) {
@@ -153,6 +161,22 @@ public class GameController : MonoBehaviour {
         if (game_status == GAME_STATUS.START)
         {
             checkClick();
+            checkSheild();
+        }
+    }
+
+    void checkSheild() {
+        if (Mathf.Abs(sheildTime + 1) > 0.000001f)
+        {
+            if (sheildTime > 0)
+            {
+                sheildTime -= Time.deltaTime;
+            }
+            else
+            {
+                ballList[0].transform.GetComponent<SpriteRenderer>().color = Color.white;
+                sheildTime = -1;
+            }
         }
     }
 
@@ -226,7 +250,6 @@ public class GameController : MonoBehaviour {
             delVX = (Camera.main.ScreenToWorldPoint(Input.mousePosition) - originV).x;
             originV = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         }
-       // else if (Input.GetMouseButtonUp(0)) {
         else {
             delVX = 0;
         }
@@ -351,6 +374,12 @@ public class GameController : MonoBehaviour {
     //碰到砖块
     public void hitBrick(GameObject brick)
     {
+        if (ballList.Count == 1)
+        {
+            gameOver();
+            return;
+        }
+
         AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.hit);
 
         delVX = 0;
@@ -360,15 +389,27 @@ public class GameController : MonoBehaviour {
         isCrossing = true;
 
         gameUI.updateScore();
-        if (ballList.Count == 1)
-        {
-            gameOver();
-            return;
-        }
-        
         changeDirY();
-        Destroy(ballList[0]);
-        ballList.RemoveAt(0);
+        if (Mathf.Abs(sheildTime + 1) < 0.000001f)
+        {
+            if (ballList.Count == 1)
+            {
+                gameOver();
+                return;
+            }
+
+            Destroy(ballList[0]);
+            ballList.RemoveAt(0);
+
+        }
+        else
+        {
+            //sheild
+            if (ballList.Count > 1)
+                ballList[0].transform.localPosition = new Vector3(ballList[0].transform.localPosition.x, ballList[1].transform.localPosition.y, ballList[0].transform.localPosition.z);
+            else
+                ballList[0].transform.localPosition = new Vector3(ballList[0].transform.localPosition.x, ballList[0].transform.localPosition.y - r * 2, ballList[0].transform.localPosition.z);
+        }
 
         ballList[0].transform.GetComponent<CircleCollider2D>().enabled = true;
         Vector3 positionVisual = this.ballList[0].transform.localPosition;
@@ -381,11 +422,9 @@ public class GameController : MonoBehaviour {
         ballList[0].transform.localPosition = positionVisual;
         this.dirList[0] = positionVisual;
 
-
         Text_ballCount.text = getBallCount() + "";
         brick.GetComponent<Brick>().hit();
-        //if (!soundHit.GetComponent<AudioController>().getIsPlaying())
-        //    soundHit.GetComponent<AudioController>().playSound();
+
         if (brick.GetComponent<Brick>().getNumber() < 1)
         {
             var Fx_boom = GameObject.Instantiate<GameObject>(Boom0);
@@ -415,9 +454,11 @@ public class GameController : MonoBehaviour {
         {
             dirY = (score - 300) * 1.0f / 200 * 0.02f + 0.06f;
         }
-        else {
+        else
+        {
             dirY = 0.08f;
         }
+
     }
 
     //得到新球

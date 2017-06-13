@@ -32,7 +32,7 @@ public class Ball : MonoBehaviour {
             if (hit.transform.name.Contains("brick"))
             {
                 // 只能从底部碰撞
-                if (hit.transform.localPosition.y - 1.115f / 2 < transform.position.y)
+                if (hit.transform.localPosition.y - 1.115f / 2 + 0.1f < transform.position.y)
                     return;
 
                 gameController.hitBrick(hit.transform.gameObject);
@@ -58,7 +58,7 @@ public class Ball : MonoBehaviour {
         Debug.Log("onTriggerExitEvent: " + col.gameObject.name);
     }
 
-    void OnCollisionEnter2D(Collision2D coll)
+    void OnCollisionStay2D(Collision2D coll)
     {
         if (gameController == null)
             return;
@@ -68,7 +68,7 @@ public class Ball : MonoBehaviour {
             if (coll.gameObject.name.Contains("brick"))
             {
                 // 只能从底部碰撞
-                if (coll.transform.localPosition.y - 1.115f / 2 < transform.position.y)
+                if (coll.transform.localPosition.y - 1.115f / 2 +0.1f< transform.position.y)
                     return;
 
                 gameController.hitBrick(coll.gameObject);

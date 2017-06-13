@@ -15,8 +15,10 @@ public class GameUI : MonoBehaviour {
     Transform Shop;
     Transform Tutorial;
     Transform Rate;
+    Transform GameScene;
     Text Text_best;
     Text Text_score;
+    Text Text_sheildCount;
     Text Over_score;
     Text Over_best;
     AudioSource audio;
@@ -41,15 +43,15 @@ public class GameUI : MonoBehaviour {
         gameController = GameObject.Find("Game").transform.GetComponent<GameController>();
         Menu = transform.Find("Menu");
         GameOver = transform.Find("GameOver");
+        Rate = transform.Find("Rate");
+        GameScene = transform.Find("GameScene");
+        Shop = transform.Find("Shop");
+        Tutorial = transform.Find("Tutorial");
         Over_score = GameOver.Find("Text_score").GetComponent<Text>();
         Over_best = GameOver.Find("Text_best").GetComponent<Text>();
         Text_best = Menu.Find("Text_best").GetComponent<Text>();
-        Text_score = transform.Find("GameScene").Find("Text_score").GetComponent<Text>();
-        Rate = transform.Find("Rate");
-        Shop = transform.Find("Shop");
-        Tutorial = transform.Find("Tutorial");
-
-        initMenu();
+        Text_score = GameScene.Find("Text_score").GetComponent<Text>();
+        Text_sheildCount = GameScene.Find("Text_count").GetComponent<Text>();
 
         audio = GetComponent<AudioSource>();
         GameObject go_audioclip = GameObject.Find("AudioClipSet");
@@ -57,12 +59,15 @@ public class GameUI : MonoBehaviour {
         GameOver.localPosition = new Vector3(0, 1960, 0);
         Tutorial.localPosition = new Vector3(0, 1960, 0);
         Rate.localPosition = new Vector3(0, 1960, 0);
+        GameScene.localPosition = new Vector3(0, 1960, 0);
 
         if (go_audioclip)
         {
             audioclip_set = go_audioclip.GetComponent<AudioClipSet>();
         }
-	}
+
+        initMenu();
+    }
 
     public void onStoreClick()
     {
@@ -73,18 +78,6 @@ public class GameUI : MonoBehaviour {
     void Update()
     {
         //addCoin();
-        checkClick();
-    }
-
-    public void checkClick()
-    {
-        if (Input.GetMouseButtonUp(0))
-        {
-            if (Menu.localPosition.y == 0 && Input.mousePosition.y < 1750 && Input.mousePosition.y >= 550)
-            {
-                onStartBtnClick();
-            }
-        }
     }
 
     // 动态增长金币。
@@ -162,6 +155,16 @@ public class GameUI : MonoBehaviour {
         transform.GetComponent<CanvasScaler>().scaleFactor = scale;
     }
 
+    public void onShieldClick() {
+        int count = PlayerPrefs.GetInt("ShieldCount", 10);
+        if (count > 0) {
+            count--;
+            PlayerPrefs.SetInt("ShieldCount", count);
+            Text_sheildCount.text = count + "";
+            gameController.useSheild();
+        }
+    }
+
     public void updateScore()
     {
         score++;
@@ -177,18 +180,22 @@ public class GameUI : MonoBehaviour {
     public void onStartBtnClick() {
         AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.button_click);
 
+        score = 0;
         gameController.ballMoveStart();
         Menu.localPosition = new Vector3(0, 1920, 0);
+        GameScene.localPosition = new Vector3(0, 0, 0);
     }
 
     public void initMenu()
     {
         Text_best.text = PlayerPrefs.GetInt("BestScore", 0) + "";
-        Menu.localPosition = new Vector3(0, 0, 0);
         score = 0;
         Text_score.text = score + "";
+        Text_sheildCount.text = PlayerPrefs.GetInt("ShieldCount", 10) + "";
+        gameController.initMap();
+        Menu.localPosition = new Vector3(0, 0, 0);
         GameOver.localPosition = new Vector3(0, 1920, 0);
-        gameController.clearBg();
+        GameScene.localPosition = new Vector3(0, 1920, 0);
     }
 
     public void gameOver() {
