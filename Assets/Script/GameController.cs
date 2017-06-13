@@ -14,6 +14,8 @@ public class GameController : MonoBehaviour {
     public float sheildCooling = 3;
     public Spawner spawner;
 
+    AudioSource audio;
+    AudioClipSet audioclip_set; 
     Transform wall;
     GameObject trail;
     GameObject bg;
@@ -30,11 +32,13 @@ public class GameController : MonoBehaviour {
     float delVX;
     GAME_STATUS game_status;
     Loops loopdata;
+    float sheildTime = -1;
+    // 碰砖块时位置
     float stopY = 0;
     bool isCrossing = false;
-    int genLevel = 0;
+    // 碰到bar停止移动
     bool isStop = false;
-    float sheildTime = -1;
+    bool isFirst = true;
 
     //prefab
     GameObject brick0;
@@ -44,9 +48,6 @@ public class GameController : MonoBehaviour {
     GameObject bar2;
     GameObject gainball0;
     GameObject blockball0;
-
-    AudioSource audio;
-    public AudioClipSet audioclip_set;
 
 
     public GAME_STATUS getGameStatus() {
@@ -82,6 +83,7 @@ public class GameController : MonoBehaviour {
 
     public void ballMoveStart()
     {
+        isFirst = true;
         isCrossing = false;
         initBallList(ballCount);
         Text_ballCount.text = getBallCount() + "";
@@ -96,6 +98,7 @@ public class GameController : MonoBehaviour {
 
     public void reviveStart(int count)
     {
+        isFirst = false;
         RemoveWallItems(2);
         isCrossing = false;
         initBallList(count);
@@ -368,7 +371,7 @@ public class GameController : MonoBehaviour {
 
         game_status = GAME_STATUS.READY;
        // Text_ballCount.text = "";
-        gameUI.gameOver();
+        gameUI.gameOver(isFirst);
     }
 
     //碰到砖块

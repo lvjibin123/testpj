@@ -22,7 +22,8 @@ public class ShopController : MonoBehaviour
     GameObject Text_timer;
     GameObject video;
     DateTime aimTime;
-    GameObject soundBtn;
+    AudioSource audio;
+    AudioClipSet audioclip_set;
 
     void Awake()
     {
@@ -30,10 +31,16 @@ public class ShopController : MonoBehaviour
     }
     // Use this for initialization
 	void Start () {
-        soundBtn = GameObject.Find("soundBtn");
         gameUI = GameObject.Find("GameUI").GetComponent<GameUI>();
         Text_timer = transform.Find("Button_video").transform.Find("Text_timer").gameObject;
         video = transform.Find("Button_video").transform.Find("video").gameObject;
+
+        GameObject go_audioclip = GameObject.Find("AudioClipSet");
+        audio = GetComponent<AudioSource>();
+        if (go_audioclip)
+        {
+            audioclip_set = go_audioclip.GetComponent<AudioClipSet>();
+        }
        // purchaseSup = GameObject.Find("GamePlus").GetComponent<InAppPurchaseSup>();
        // adsSup = GameObject.Find("GamePlus").GetComponent<AdvertiseSup>();
        // nativeAd = GameObject.Find("GamePlus").GetComponent<GPNativeAd>();
@@ -127,6 +134,7 @@ public class ShopController : MonoBehaviour
 
     public void onBackClick()
     {
+        AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.button_click);
         transform.localPosition = new Vector3(0, 1960, 0);
         // mAdmobBannerNative.show();
        // gameUI.onMenuClick();

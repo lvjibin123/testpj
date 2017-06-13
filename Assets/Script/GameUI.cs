@@ -26,6 +26,7 @@ public class GameUI : MonoBehaviour {
     Text Over_more;
     AudioSource audio;
     AudioClipSet audioclip_set;
+    AudioSource music;
 
     int score = 0;
     int deltaCoin = -1;
@@ -62,11 +63,14 @@ public class GameUI : MonoBehaviour {
 
         audio = GetComponent<AudioSource>();
         GameObject go_audioclip = GameObject.Find("AudioClipSet");
-        Shop.transform.localPosition = new Vector3(0, 1960, 0);
-        GameOver.localPosition = new Vector3(0, 1960, 0);
-        Tutorial.localPosition = new Vector3(0, 1960, 0);
-        Rate.localPosition = new Vector3(0, 1960, 0);
-        GameScene.localPosition = new Vector3(0, 1960, 0);
+        Shop.transform.localPosition = new Vector3(0, 1920, 0);
+        GameOver.localPosition = new Vector3(0, 1920, 0);
+        Tutorial.localPosition = new Vector3(0, 1920, 0);
+        Rate.localPosition = new Vector3(0, 1920, 0);
+        GameScene.localPosition = new Vector3(0, 1920, 0);
+        Menu.localPosition = Vector3.zero;
+        music = GameObject.Find("Music").GetComponent<AudioSource>();
+        music.Stop();
 
         if (go_audioclip)
         {
@@ -79,7 +83,7 @@ public class GameUI : MonoBehaviour {
     public void onStoreClick()
     {
         AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.button_click);
-        Shop.transform.localPosition = new Vector3(0, 0, 0);
+        Shop.transform.localPosition = Vector3.zero;
     }
 
     void Update()
@@ -101,6 +105,7 @@ public class GameUI : MonoBehaviour {
             else {
                 reviveDelta = -1;
                 Button_more.gameObject.SetActive(false);
+                AudioSourcesManager.GetInstance().Stop(audio);
             }
         }
     }
@@ -123,7 +128,7 @@ public class GameUI : MonoBehaviour {
 
     public void popRateWind()
     {
-        Rate.localPosition = new Vector3(0, 0, 0);
+        Rate.localPosition = Vector3.zero;
     }
 
     public void onRateClick()
@@ -204,11 +209,11 @@ public class GameUI : MonoBehaviour {
 
     public void onStartBtnClick() {
         AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.button_click);
-
+        music.Play();
         score = 0;
         gameController.ballMoveStart();
         Menu.localPosition = new Vector3(0, 1920, 0);
-        GameScene.localPosition = new Vector3(0, 0, 0);
+        GameScene.localPosition = Vector3.zero;
     }
 
     public void initMenu()
@@ -218,25 +223,40 @@ public class GameUI : MonoBehaviour {
         Text_score.text = score + "";
         Text_sheildCount.text = PlayerPrefs.GetInt("ShieldCount", 10) + "";
         gameController.initMap();
-        Menu.localPosition = new Vector3(0, 0, 0);
-        GameOver.localPosition = new Vector3(0, 1920, 0);
-        GameScene.localPosition = new Vector3(0, 1920, 0);
     }
 
-    public void gameOver() {
+    public void onRestartClick() {
+        AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.button_click);
+        Menu.localPosition = Vector3.zero;
+        GameOver.localPosition = new Vector3(0, 1920, 0);
+        GameScene.localPosition = new Vector3(0, 1920, 0);
+        initMenu();
+    }
+
+    public void gameOver(bool isFirst) {
+        music.Stop();
         // 倒计时
-        GameOver.localPosition = new Vector3(0, 0, 0);
+        GameOver.localPosition = Vector3.zero;
         Over_score.text = score + "";
         Over_best.text = PlayerPrefs.GetInt("BestScore", 0) + "";
-        reviveDelta = reviveBall;
-        currentReviveBall = reviveBall;
-        Over_more.text = "One More Life With " + currentReviveBall + " Balls";
-        Button_more.gameObject.SetActive(true);
+        if (isFirst)
+        {
+            AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.time_down);
+            reviveDelta = reviveBall;
+            currentReviveBall = reviveBall;
+            Over_more.text = "One More Life With " + currentReviveBall + " Balls";
+            Button_more.gameObject.SetActive(true);
+        }
+        else {
+            Button_more.gameObject.SetActive(false);
+        }
     }
 
     public void moreLifeClick()
     {
         // 复活
+        music.Play();
+        AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.button_click);
         GameOver.localPosition = new Vector3(0, 1920, 0);
         int count = (int)Mathf.Ceil(reviveDelta);
         if (count > 0)
@@ -246,6 +266,6 @@ public class GameUI : MonoBehaviour {
     public void onTutorialClick()
     {
         AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.button_click);
-        Tutorial.localPosition = new Vector3(0, 0, 0);
+        Tutorial.localPosition = Vector3.zero;
     }
 }

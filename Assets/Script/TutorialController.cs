@@ -4,21 +4,30 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class TutorialController : MonoBehaviour {
+
     GameObject Tutorial;
     GameObject tutorialClose;
     GameObject gesture;
     ScrollRect Scroller;
-    bool scrollTag = true;
+    AudioSource audio;
+    AudioClipSet audioclip_set;
+
   //  private InAppPurchaseSup purchaseSup;
-    GameObject soundBtn;
-    // Use this for initialization
+    bool scrollTag = true;
+
 	void Start () {
-     //   soundBtn = GameObject.Find("soundBtn");
         Tutorial = GameObject.Find("Tutorial");
         tutorialClose = Tutorial.transform.Find("close").gameObject;
         gesture = GameObject.Find("gesture");
         Scroller = GameObject.Find("Scroller").GetComponent<ScrollRect>();
         Scroller.onValueChanged.AddListener(ListenerMethod);
+        GameObject go_audioclip = GameObject.Find("AudioClipSet");
+        audio = GetComponent<AudioSource>();
+        if (go_audioclip)
+        {
+            audioclip_set = go_audioclip.GetComponent<AudioClipSet>();
+        }
+
  //       purchaseSup = GameObject.Find("GamePlus").GetComponent<InAppPurchaseSup>();
 	}
 
@@ -35,7 +44,6 @@ public class TutorialController : MonoBehaviour {
         }
     }
 
-	// Update is called once per frame
 	void Update () {
         
         if (gesture.transform.localPosition.y < -500)
@@ -50,8 +58,8 @@ public class TutorialController : MonoBehaviour {
 
     public void onCloseClick()
     {
+        AudioSourcesManager.GetInstance().Play(audio, (audioclip_set == null) ? null : audioclip_set.button_click);
         transform.localPosition = new Vector3(0, 1920, 0);
-  //      soundBtn.GetComponent<AudioController>().playSound();
     }
 
     public void onRestoreClick()
